@@ -1,6 +1,4 @@
-# fury.py
-
-from brain.command_parser import parse_command
+from execution.task_planner import create_plan
 
 
 def start_fury():
@@ -18,10 +16,12 @@ def start_fury():
             print("Shutting down Fury...")
             break
 
-        # SEND COMMAND TO PARSER
-        task = parse_command(command)
+        plan = create_plan(command)
 
-        print("Parsed Command:", task)
+        print("Execution Plan:")
+
+        for step in plan:
+            print(step)
 
 
 if __name__ == "__main__":
