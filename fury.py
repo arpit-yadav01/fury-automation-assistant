@@ -18,5 +18,6 @@ def start_fury():
         print(f"Fury received command: {command}")
 
 
+
 if __name__ == "__main__":
     start_fury()
