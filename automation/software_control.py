@@ -2,15 +2,31 @@
 
 import subprocess
 
+
 def open_application(app):
 
-    if app == "chrome":
-        subprocess.Popen(
-            ["C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"]
-        )
+    try:
 
-    elif app == "vscode":
-        subprocess.Popen(["code"])
+        aliases = {
+            "calculator": "calc",
+            "calc": "calc",
+            "notepad": "notepad",
+            "chrome": "chrome",
+            "edge": "msedge",
+            "vscode": "code",
+            "setting": "ms-settings:",
+            "settings": "ms-settings:",
+            "outlook": "msedge --app=https://outlook.office.com",
+            "docker": r'"C:\Program Files\Docker\Docker\Docker Desktop.exe"',
+            "docker desktop": r'"C:\Program Files\Docker\Docker\Docker Desktop.exe"'
+        }
 
-    else:
-        print(f"Application {app} not supported yet")
+        command = aliases.get(app, app)
+
+        print(f"Launching {command}...")
+
+        subprocess.Popen(f'start "" {command}', shell=True)
+
+    except Exception as e:
+
+        print("Failed to open application:", e)

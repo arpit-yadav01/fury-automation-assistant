@@ -4,28 +4,24 @@ def parse_command(command):
 
     command = command.lower()
 
-    # OPEN VSCODE
-    if "open" in command and "vscode" in command:
-        return {
-            "intent": "open_app",
-            "app": "vscode"
-        }
+    # OPEN ANY APPLICATION
+    if command.startswith("open"):
 
-    # OPEN CHROME
-    if "open" in command and "chrome" in command:
-        return {
-            "intent": "open_app",
-            "app": "chrome"
-        }
+        app = command.replace("open", "", 1).strip()
+
+        if app:
+
+            return {
+                "intent": "open_app",
+                "app": app
+            }
 
     # WRITE PYTHON CODE
     if "write" in command and "python" in command:
+
         return {
             "intent": "write_code",
             "language": "python"
         }
 
-    # UNKNOWN COMMAND
-    return {
-        "intent": "unknown"
-    }
+    return {"intent": "unknown"}
