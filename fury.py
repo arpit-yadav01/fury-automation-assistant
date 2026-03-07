@@ -1,4 +1,5 @@
 from execution.task_planner import create_plan
+from execution.executor import execute_plan
 
 
 def start_fury():
@@ -22,6 +23,8 @@ def start_fury():
 
         for step in plan:
             print(step)
+
+        execute_plan(plan)
 
 
 if __name__ == "__main__":
