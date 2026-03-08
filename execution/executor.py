@@ -18,13 +18,13 @@ def execute_plan(plan):
 
             open_application(app)
 
-        elif intent == "write_code":
+        elif intent == "type_text":
 
-            print("Writing python code")
+            text = task["text"]
 
-            code = "print('Hello World')"
+            print("Typing:", text)
 
-            type_text(code)
+            type_text(text)
 
         else:
 
