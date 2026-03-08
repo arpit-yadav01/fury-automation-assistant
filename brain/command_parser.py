@@ -4,24 +4,28 @@ def parse_command(command):
 
     command = command.lower()
 
-    # OPEN ANY APPLICATION
+    # OPEN APPLICATION
     if command.startswith("open"):
 
-        app = command.replace("open", "", 1).strip()
+        words = command.split(maxsplit=1)
 
-        if app:
+        if len(words) > 1:
+
+            app = words[1]
 
             return {
                 "intent": "open_app",
                 "app": app
             }
 
-    # WRITE PYTHON CODE
-    if "write" in command and "python" in command:
+    # TYPE / WRITE TEXT
+    if command.startswith("type ") or command.startswith("write "):
+
+        text = command.split(" ", 1)[1]
 
         return {
-            "intent": "write_code",
-            "language": "python"
+            "intent": "type_text",
+            "text": text
         }
 
     return {"intent": "unknown"}
