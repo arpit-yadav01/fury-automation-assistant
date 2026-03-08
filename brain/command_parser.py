@@ -50,4 +50,13 @@ def parse_command(command):
             "filename": "main.py"
         }
 
+    # WRITE PYTHON HELLO WORLD PROGRAM
+    if "hello world" in command and "python" in command:
+
+        return {
+            "intent": "generate_code",
+            "language": "python",
+            "task": "hello_world"
+        }
+
     return {"intent": "unknown"}
