@@ -18,7 +18,7 @@ def parse_command(command):
                 "app": app
             }
 
-    # TYPE / WRITE TEXT
+    # TYPE TEXT
     if command.startswith("type ") or command.startswith("write "):
 
         text = command.split(" ", 1)[1]
@@ -26,6 +26,28 @@ def parse_command(command):
         return {
             "intent": "type_text",
             "text": text
+        }
+
+    # CREATE FILE
+    if command.startswith("create file"):
+
+        words = command.split()
+
+        if len(words) >= 3:
+
+            filename = words[2]
+
+            return {
+                "intent": "create_file",
+                "filename": filename
+            }
+
+    # CREATE PYTHON FILE
+    if "create python file" in command:
+
+        return {
+            "intent": "create_file",
+            "filename": "main.py"
         }
 
     return {"intent": "unknown"}

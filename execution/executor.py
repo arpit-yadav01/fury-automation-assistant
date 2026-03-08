@@ -2,6 +2,7 @@
 
 from automation.software_control import open_application
 from automation.typing_engine import type_text
+from automation.file_manager import create_file
 
 
 def execute_plan(plan):
@@ -25,6 +26,12 @@ def execute_plan(plan):
             print("Typing:", text)
 
             type_text(text)
+
+        elif intent == "create_file":
+
+            filename = task["filename"]
+
+            create_file(filename)
 
         else:
 
