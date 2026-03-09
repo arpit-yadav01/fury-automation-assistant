@@ -5,7 +5,7 @@ from developer.code_generator import generate_code
 from automation.window_manager import focus_window
 from developer.terminal_engine import run_terminal_command
 from browser.browser_agent import open_website
-
+from browser.browser_agent import open_website, search_on_page
 def execute_plan(plan):
 
     last_app = None
@@ -73,6 +73,19 @@ def execute_plan(plan):
             print("Opening website:", url)
 
             open_website(url)
+
+        elif intent == "web_search":
+
+                query = task["query"]
+                site = task["site"]
+
+                if site == "youtube":
+                    open_website("https://www.youtube.com")
+                    search_on_page(query, 'input#search')
+
+                elif site == "google":
+                    search_url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+                    open_website(search_url)
 
 
         else:
