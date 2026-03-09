@@ -1,12 +1,13 @@
-# execution/executor.py
-
 from automation.software_control import open_application
 from automation.typing_engine import type_text
 from automation.file_manager import create_file
 from developer.code_generator import generate_code
+from automation.window_manager import focus_window
 
 
 def execute_plan(plan):
+
+    last_app = None
 
     for task in plan:
 
@@ -15,18 +16,30 @@ def execute_plan(plan):
         if intent == "open_app":
 
             app = task["app"]
+
             print("Opening", app)
+
             open_application(app)
+
+            last_app = app
+
+            focus_window(app.capitalize())
 
         elif intent == "type_text":
 
             text = task["text"]
+
+            if last_app:
+                focus_window(last_app.capitalize())
+
             print("Typing:", text)
+
             type_text(text)
 
         elif intent == "create_file":
 
             filename = task["filename"]
+
             create_file(filename)
 
         elif intent == "generate_code":
@@ -37,8 +50,6 @@ def execute_plan(plan):
             print("Generating code...")
 
             code = generate_code(language, task_name)
-
-            print("Typing generated code...")
 
             type_text(code)
 
