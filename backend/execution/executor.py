@@ -4,7 +4,7 @@ from automation.file_manager import create_file
 from developer.code_generator import generate_code
 from automation.window_manager import focus_window
 from developer.terminal_engine import run_terminal_command
-
+from browser.browser_agent import open_website
 
 def execute_plan(plan):
 
@@ -65,6 +65,14 @@ def execute_plan(plan):
             print("Executing terminal command:", command)
 
             run_terminal_command(command)
+
+        elif intent == "open_website":
+
+            url = task["url"]
+
+            print("Opening website:", url)
+
+            open_website(url)
 
 
         else:
