@@ -38,7 +38,7 @@ def search_on_page(query, selector):
     try:
 
         # wait for the input field to appear
-        current_page.wait_for_selector(selector, timeout=5000)
+        current_page.wait_for_selector(selector, timeout=15000)
 
         # type the query
         current_page.fill(selector, query)

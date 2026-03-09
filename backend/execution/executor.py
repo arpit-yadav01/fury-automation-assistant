@@ -81,7 +81,7 @@ def execute_plan(plan):
 
                 if site == "youtube":
                     open_website("https://www.youtube.com")
-                    search_on_page(query, 'input#search')
+                    search_on_page(query, 'input[name="search_query"]')
 
                 elif site == "google":
                     search_url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
