@@ -18,6 +18,15 @@ def parse_command(command):
                 "app": app
             }
 
+    # WRITE PYTHON HELLO WORLD PROGRAM (SPECIFIC RULE FIRST)
+    if "hello world" in command and "python" in command:
+
+        return {
+            "intent": "generate_code",
+            "language": "python",
+            "task": "hello_world"
+        }
+
     # TYPE TEXT
     if command.startswith("type ") or command.startswith("write "):
 
@@ -48,15 +57,6 @@ def parse_command(command):
         return {
             "intent": "create_file",
             "filename": "main.py"
-        }
-
-    # WRITE PYTHON HELLO WORLD PROGRAM
-    if "hello world" in command and "python" in command:
-
-        return {
-            "intent": "generate_code",
-            "language": "python",
-            "task": "hello_world"
         }
 
     return {"intent": "unknown"}
