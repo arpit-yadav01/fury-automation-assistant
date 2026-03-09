@@ -3,6 +3,7 @@ from automation.typing_engine import type_text
 from automation.file_manager import create_file
 from developer.code_generator import generate_code
 from automation.window_manager import focus_window
+from developer.terminal_engine import run_terminal_command
 
 
 def execute_plan(plan):
@@ -25,6 +26,7 @@ def execute_plan(plan):
 
             focus_window(app.capitalize())
 
+
         elif intent == "type_text":
 
             text = task["text"]
@@ -36,11 +38,13 @@ def execute_plan(plan):
 
             type_text(text)
 
+
         elif intent == "create_file":
 
             filename = task["filename"]
 
             create_file(filename)
+
 
         elif intent == "generate_code":
 
@@ -52,6 +56,16 @@ def execute_plan(plan):
             code = generate_code(language, task_name)
 
             type_text(code)
+
+
+        elif intent == "run_terminal":
+
+            command = task["command"]
+
+            print("Executing terminal command:", command)
+
+            run_terminal_command(command)
+
 
         else:
 

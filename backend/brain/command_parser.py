@@ -18,7 +18,7 @@ def parse_command(command):
                 "app": app
             }
 
-    # WRITE PYTHON HELLO WORLD PROGRAM (SPECIFIC RULE FIRST)
+    # PYTHON HELLO WORLD PROGRAM
     if "hello world" in command and "python" in command:
 
         return {
@@ -57,6 +57,34 @@ def parse_command(command):
         return {
             "intent": "create_file",
             "filename": "main.py"
+        }
+
+    # RUN TERMINAL COMMAND
+    if command.startswith("run command"):
+
+        cmd = command.replace("run command", "").strip()
+
+        return {
+            "intent": "run_terminal",
+            "command": cmd
+        }
+
+    # RUN PYTHON FILE
+    if command.startswith("run python file"):
+
+        filename = command.replace("run python file", "").strip()
+
+        return {
+            "intent": "run_terminal",
+            "command": f"python {filename}"
+        }
+
+    # INSTALL PYTHON PACKAGE
+    if command.startswith("pip install"):
+
+        return {
+            "intent": "run_terminal",
+            "command": command
         }
 
     return {"intent": "unknown"}
