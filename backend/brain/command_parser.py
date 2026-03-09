@@ -87,4 +87,35 @@ def parse_command(command):
             "command": command
         }
 
+
+            # CREATE REACT APP
+    if command.startswith("create react app"):
+
+        words = command.split()
+
+        if len(words) >= 4:
+
+            project_name = words[3]
+
+            return {
+                "intent": "run_terminal",
+                "command": f"npx create-react-app {project_name}"
+            }
+
+    # RUN NPM INSTALL
+    if command == "npm install":
+
+        return {
+            "intent": "run_terminal",
+            "command": "npm install"
+        }
+
+    # RUN NPM START
+    if command == "npm start":
+
+        return {
+            "intent": "run_terminal",
+            "command": "npm start"
+        }
+
     return {"intent": "unknown"}
