@@ -1,5 +1,8 @@
 # brain/command_parser.py
 
+from brain.ai_interpreter import interpret_command
+
+
 def parse_command(command):
 
     command = command.lower().strip()
@@ -25,6 +28,7 @@ def parse_command(command):
     # GOOGLE SEARCH
     if command.startswith("search"):
         query = command.replace("search", "").strip()
+
         url = f"https://www.google.com/search?q={query}"
 
         return {
@@ -143,6 +147,15 @@ def parse_command(command):
                 "intent": "open_app",
                 "app": app
             }
+
+    # -----------------------------
+    # AI INTERPRETATION FALLBACK
+    # -----------------------------
+
+    ai_result = interpret_command(command)
+
+    if ai_result:
+        return ai_result
 
     # -----------------------------
     # UNKNOWN COMMAND
