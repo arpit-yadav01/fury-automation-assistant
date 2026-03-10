@@ -20,30 +20,42 @@ def open_website(url):
 
     start_browser()
 
-    current_page = browser.new_page()
+    # If page was closed, create a new one
+    if current_page is None or current_page.is_closed():
+        current_page = browser.new_page()
 
     print("Opening:", url)
 
     current_page.goto(url)
 
 
-def search_on_page(query, selector):
+def search_on_page(query, selector=None):
 
     global current_page
 
-    if current_page is None:
+    if current_page is None or current_page.is_closed():
         print("No active browser page")
         return
 
     try:
 
-        # wait for the input field to appear
+        current_page.wait_for_timeout(2000)
+
+        # Detect website automatically
+        if "youtube" in current_page.url:
+            selector = 'input[name="search_query"]'
+
+        elif "google" in current_page.url:
+            selector = 'input[name="q"]'
+
+        if selector is None:
+            print("No selector for this site")
+            return
+
         current_page.wait_for_selector(selector, timeout=15000)
 
-        # type the query
         current_page.fill(selector, query)
 
-        # press enter
         current_page.keyboard.press("Enter")
 
         print("Searching:", query)
