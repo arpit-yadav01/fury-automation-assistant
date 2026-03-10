@@ -25,15 +25,14 @@ def parse_command(command):
             "url": "https://www.youtube.com"
         }
 
-    # GOOGLE SEARCH
+    # GENERIC SEARCH (DO NOT FORCE GOOGLE HERE)
     if command.startswith("search"):
         query = command.replace("search", "").strip()
 
-        url = f"https://www.google.com/search?q={query}"
-
         return {
-            "intent": "open_website",
-            "url": url
+            "intent": "web_search",
+            "site": "google",
+            "query": query
         }
 
     # -----------------------------
