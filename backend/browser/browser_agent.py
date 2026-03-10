@@ -15,33 +15,49 @@ def start_browser():
         browser = playwright_instance.chromium.launch(headless=False)
 
 
-def open_website(url):
+def ensure_page():
+    """Ensure we always have a valid browser page"""
     global browser, current_page
 
-    start_browser()
+    if browser is None:
+        start_browser()
 
-    # If page was closed, create a new one
-    if current_page is None or current_page.is_closed():
+    try:
+        if current_page is None or current_page.is_closed():
+            current_page = browser.new_page()
+    except:
         current_page = browser.new_page()
 
-    print("Opening:", url)
 
-    current_page.goto(url)
+def open_website(url):
+    global current_page
+
+    start_browser()
+    ensure_page()
+
+    try:
+        print("Opening:", url)
+        current_page.goto(url)
+
+    except:
+        # If page crashed, recreate it
+        print("Page crashed, recreating tab...")
+
+        current_page = browser.new_page()
+        current_page.goto(url)
 
 
 def search_on_page(query, selector=None):
 
     global current_page
 
-    if current_page is None or current_page.is_closed():
-        print("No active browser page")
-        return
+    ensure_page()
 
     try:
 
         current_page.wait_for_timeout(2000)
 
-        # Detect website automatically
+        # Auto detect website
         if "youtube" in current_page.url:
             selector = 'input[name="search_query"]'
 
@@ -49,7 +65,7 @@ def search_on_page(query, selector=None):
             selector = 'input[name="q"]'
 
         if selector is None:
-            print("No selector for this site")
+            print("No selector available")
             return
 
         current_page.wait_for_selector(selector, timeout=15000)
