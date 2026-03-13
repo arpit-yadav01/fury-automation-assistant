@@ -15,3 +15,17 @@ def create_file(filename):
     except Exception as e:
 
         print("Error creating file:", e)
+
+
+def write_to_file(filename, content):
+
+    try:
+
+        with open(filename, "w") as f:
+            f.write(content)
+
+        print(f"Written to file: {filename}")
+
+    except Exception as e:
+
+        print("Error writing file:", e)
