@@ -1,6 +1,7 @@
 # brain/command_parser.py
 
 from brain.ai_interpreter import interpret_command
+from brain.llm_brain import interpret_with_llm
 
 
 def parse_command(command):
@@ -11,22 +12,20 @@ def parse_command(command):
     # WEBSITE COMMANDS (SPECIFIC FIRST)
     # -----------------------------
 
-    # OPEN GOOGLE
-    if "open google" in command:
+    if command == "open google":
         return {
             "intent": "open_website",
             "url": "https://www.google.com"
         }
 
-    # OPEN YOUTUBE
-    if "open youtube" in command:
+    if command == "open youtube":
         return {
             "intent": "open_website",
             "url": "https://www.youtube.com"
         }
 
-    # GENERIC SEARCH (DO NOT FORCE GOOGLE HERE)
-    if command.startswith("search"):
+    if command.startswith("search "):
+
         query = command.replace("search", "").strip()
 
         return {
@@ -40,6 +39,7 @@ def parse_command(command):
     # -----------------------------
 
     if "hello world" in command and "python" in command:
+
         return {
             "intent": "generate_code",
             "language": "python",
@@ -51,6 +51,7 @@ def parse_command(command):
     # -----------------------------
 
     if command.startswith("type ") or command.startswith("write "):
+
         text = command.split(" ", 1)[1]
 
         return {
@@ -63,9 +64,11 @@ def parse_command(command):
     # -----------------------------
 
     if command.startswith("create file"):
+
         words = command.split()
 
         if len(words) >= 3:
+
             filename = words[2]
 
             return {
@@ -74,6 +77,7 @@ def parse_command(command):
             }
 
     if "create python file" in command:
+
         return {
             "intent": "create_file",
             "filename": "main.py"
@@ -84,6 +88,7 @@ def parse_command(command):
     # -----------------------------
 
     if command.startswith("run command"):
+
         cmd = command.replace("run command", "").strip()
 
         return {
@@ -92,6 +97,7 @@ def parse_command(command):
         }
 
     if command.startswith("run python file"):
+
         filename = command.replace("run python file", "").strip()
 
         return {
@@ -100,19 +106,22 @@ def parse_command(command):
         }
 
     if command.startswith("pip install"):
+
         return {
             "intent": "run_terminal",
             "command": command
         }
 
     # -----------------------------
-    # DEVELOPER WORKFLOWS
+    # DEV WORKFLOWS
     # -----------------------------
 
     if command.startswith("create react app"):
+
         words = command.split()
 
         if len(words) >= 4:
+
             project_name = words[3]
 
             return {
@@ -121,25 +130,29 @@ def parse_command(command):
             }
 
     if command == "npm install":
+
         return {
             "intent": "run_terminal",
             "command": "npm install"
         }
 
     if command == "npm start":
+
         return {
             "intent": "run_terminal",
             "command": "npm start"
         }
 
     # -----------------------------
-    # OPEN APPLICATION (GENERIC LAST)
+    # OPEN APP (GENERIC LAST)
     # -----------------------------
 
     if command.startswith("open"):
+
         words = command.split(maxsplit=1)
 
         if len(words) > 1:
+
             app = words[1]
 
             return {
@@ -148,7 +161,7 @@ def parse_command(command):
             }
 
     # -----------------------------
-    # AI INTERPRETATION FALLBACK
+    # AI INTERPRETER FALLBACK
     # -----------------------------
 
     ai_result = interpret_command(command)
@@ -157,7 +170,16 @@ def parse_command(command):
         return ai_result
 
     # -----------------------------
-    # UNKNOWN COMMAND
+    # LLM FALLBACK (OPTIONAL)
+    # -----------------------------
+
+    llm_result = interpret_with_llm(command)
+
+    if llm_result:
+        return llm_result
+
+    # -----------------------------
+    # UNKNOWN
     # -----------------------------
 
     return {"intent": "unknown"}

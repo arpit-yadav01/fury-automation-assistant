@@ -1,67 +1,46 @@
-# brain/llm_brain.py
 
-import json
+import re
 import os
-from dotenv import load_dotenv
 from openai import OpenAI
 
-# Load .env variables
-load_dotenv()
+GROQ_KEY = os.getenv("GROQ_API_KEY")
 
-client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY"),
-    base_url="https://api.groq.com/openai/v1"   # remove this line if using OpenAI
-)
+client = None
 
-SYSTEM_PROMPT = """
-You are the reasoning brain of an AI desktop agent named Fury.
-
-Convert the user command into structured JSON tasks.
-
-Supported intents:
-
-open_app
-type_text
-create_file
-generate_code
-run_terminal
-open_website
-web_search
-click_text
-
-Return ONLY a JSON list.
-
-Example:
-
-User: open youtube and search lo fi music
-
-[
- {"intent":"open_website","url":"https://www.youtube.com"},
- {"intent":"web_search","site":"youtube","query":"lo fi music"}
-]
-"""
+if GROQ_KEY:
+    client = OpenAI(
+        api_key=GROQ_KEY,
+        base_url="https://api.groq.com/openai/v1"
+    )
 
 
 def interpret_with_llm(command):
 
+    if client is None:
+        return None
+
     try:
 
         response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",   # good Groq model
+            model="llama3-70b-8192",
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": command}
+                {
+                    "role": "system",
+                    "content": "Return ONLY JSON list of tasks"
+                },
+                {
+                    "role": "user",
+                    "content": command
+                }
             ]
         )
 
-        text = response.choices[0].message.content
+        text = response.choices[0].message.content.strip()
 
-        tasks = json.loads(text)
+        text = re.sub(r"```json", "", text)
+        text = re.sub(r"```", "", text)
 
-        return tasks
+        return json.loads(text)
 
-    except Exception as e:
-
-        print("LLM interpretation failed:", e)
-
+    except Exception:
         return None
