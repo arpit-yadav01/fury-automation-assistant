@@ -16,9 +16,13 @@ def open_vscode():
 
     open_application("vscode")
 
-    wait(2)
+    # wait for vscode to open
+    wait(3)
 
+    # focus vscode window
     focus_window("Code")
+
+    wait(1)
 
 
 # -----------------------
@@ -29,19 +33,29 @@ def create_new_file(filename):
 
     print("Creating new file:", filename)
 
+    # make sure vscode focused
+    focus_window("Code")
+
+    wait(1)
+
+    # create new file
     hotkey("ctrl", "n")
 
-    wait(1)
+    wait(2)
 
+    # open save dialog
     hotkey("ctrl", "s")
 
-    wait(1)
+    wait(2)
 
+    # type filename
     type_text(filename)
+
+    wait(1)
 
     press("enter")
 
-    wait(1)
+    wait(2)
 
 
 # -----------------------
@@ -52,7 +66,11 @@ def write_code(code):
 
     print("Writing code")
 
+    wait(1)
+
     type_text(code)
+
+    wait(1)
 
 
 # -----------------------
@@ -61,9 +79,11 @@ def write_code(code):
 
 def save_file():
 
+    print("Saving file")
+
     hotkey("ctrl", "s")
 
-    wait(1)
+    wait(2)
 
 
 # -----------------------
@@ -74,11 +94,18 @@ def run_python_file(filename):
 
     print("Running python file")
 
-    hotkey("ctrl", "`")
+    focus_window("Code")
 
     wait(1)
 
+    # open terminal in vscode
+    hotkey("ctrl", "`")
+
+    wait(2)
+
     run_terminal_command(f"python {filename}")
+
+    wait(1)
 
 
 # -----------------------
@@ -89,8 +116,14 @@ def run_command(cmd):
 
     print("Running command:", cmd)
 
-    hotkey("ctrl", "`")
+    focus_window("Code")
 
     wait(1)
 
+    hotkey("ctrl", "`")
+
+    wait(2)
+
     run_terminal_command(cmd)
+
+    wait(1)
