@@ -16,19 +16,29 @@ def skill_open_app(task):
 
     app = task.get("app")
 
-    if app:
-        print("Opening", app)
-        open_application(app)
+    if not app:
+        return
 
+    print("Opening", app)
+
+    open_application(app)
+
+
+# -------------------------
 
 def skill_open_website(task):
 
     url = task.get("url")
 
-    if url:
-        print("Opening website:", url)
-        open_website(url)
+    if not url:
+        return
 
+    print("Opening website:", url)
+
+    open_website(url)
+
+
+# -------------------------
 
 def skill_web_search(task):
 
@@ -36,17 +46,23 @@ def skill_web_search(task):
     site = task.get("site", "google")
 
     if not query:
+        open_website("https://www.google.com")
         return
 
     if site == "youtube":
 
         open_website("https://www.youtube.com")
+
         search_on_page(query)
 
     else:
 
-        open_website(f"https://www.google.com/search?q={query}")
+        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
 
+        open_website(url)
+
+
+# -------------------------
 
 def skill_create_file(task):
 
@@ -55,6 +71,8 @@ def skill_create_file(task):
     if filename:
         create_file(filename)
 
+
+# -------------------------
 
 def skill_write_file(task):
 
@@ -65,6 +83,8 @@ def skill_write_file(task):
         write_to_file(filename, text)
 
 
+# -------------------------
+
 def skill_type_text(task):
 
     text = task.get("text")
@@ -73,6 +93,8 @@ def skill_type_text(task):
         type_text(text)
 
 
+# -------------------------
+
 def skill_run_terminal(task):
 
     command = task.get("command")
@@ -80,6 +102,8 @@ def skill_run_terminal(task):
     if command:
         run_terminal_command(command)
 
+
+# -------------------------
 
 def skill_click_text(task):
 
