@@ -160,6 +160,7 @@ SKILLS = {
     "run_terminal": skill_run_terminal,
     "click_text": skill_click_text,
 
+
     # STEP 25
     "open_vscode": skill_open_vscode,
     "create_code_file": skill_create_code_file,
