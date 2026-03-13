@@ -7,38 +7,36 @@ from vision.ui_click import click_text
 from automation.typing_engine import type_text
 from automation.software_control import open_application
 
+# STEP 25
+from developer.dev_workflow import (
+    open_vscode,
+    create_new_file,
+    write_code,
+    save_file,
+    run_python_file,
+    run_command,
+)
+
 
 # -------------------------
-# SKILLS
+# OLD SKILLS
 # -------------------------
 
 def skill_open_app(task):
 
     app = task.get("app")
 
-    if not app:
-        return
+    if app:
+        open_application(app)
 
-    print("Opening", app)
-
-    open_application(app)
-
-
-# -------------------------
 
 def skill_open_website(task):
 
     url = task.get("url")
 
-    if not url:
-        return
+    if url:
+        open_website(url)
 
-    print("Opening website:", url)
-
-    open_website(url)
-
-
-# -------------------------
 
 def skill_web_search(task):
 
@@ -46,13 +44,12 @@ def skill_web_search(task):
     site = task.get("site", "google")
 
     if not query:
-        open_website("https://www.google.com")
+        open_website("https://google.com")
         return
 
     if site == "youtube":
 
-        open_website("https://www.youtube.com")
-
+        open_website("https://youtube.com")
         search_on_page(query)
 
     else:
@@ -62,8 +59,6 @@ def skill_web_search(task):
         open_website(url)
 
 
-# -------------------------
-
 def skill_create_file(task):
 
     filename = task.get("filename")
@@ -71,8 +66,6 @@ def skill_create_file(task):
     if filename:
         create_file(filename)
 
-
-# -------------------------
 
 def skill_write_file(task):
 
@@ -83,8 +76,6 @@ def skill_write_file(task):
         write_to_file(filename, text)
 
 
-# -------------------------
-
 def skill_type_text(task):
 
     text = task.get("text")
@@ -92,8 +83,6 @@ def skill_type_text(task):
     if text:
         type_text(text)
 
-
-# -------------------------
 
 def skill_run_terminal(task):
 
@@ -103,8 +92,6 @@ def skill_run_terminal(task):
         run_terminal_command(command)
 
 
-# -------------------------
-
 def skill_click_text(task):
 
     text = task.get("text")
@@ -113,12 +100,57 @@ def skill_click_text(task):
         click_text(text)
 
 
+# =====================================================
+# STEP 25 DEV SKILLS
+# =====================================================
+
+def skill_open_vscode(task):
+
+    open_vscode()
+
+
+def skill_create_code_file(task):
+
+    filename = task.get("filename", "test.py")
+
+    create_new_file(filename)
+
+
+def skill_write_code(task):
+
+    code = task.get("code")
+
+    if code:
+        write_code(code)
+
+
+def skill_save_file(task):
+
+    save_file()
+
+
+def skill_run_python(task):
+
+    filename = task.get("filename", "test.py")
+
+    run_python_file(filename)
+
+
+def skill_dev_command(task):
+
+    cmd = task.get("command")
+
+    if cmd:
+        run_command(cmd)
+
+
 # -------------------------
 # SKILL MAP
 # -------------------------
 
 SKILLS = {
 
+    # OLD
     "open_app": skill_open_app,
     "open_website": skill_open_website,
     "web_search": skill_web_search,
@@ -128,4 +160,11 @@ SKILLS = {
     "run_terminal": skill_run_terminal,
     "click_text": skill_click_text,
 
+    # STEP 25
+    "open_vscode": skill_open_vscode,
+    "create_code_file": skill_create_code_file,
+    "write_code": skill_write_code,
+    "save_file": skill_save_file,
+    "run_python": skill_run_python,
+    "run_dev_command": skill_dev_command,
 }
