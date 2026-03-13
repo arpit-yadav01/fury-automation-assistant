@@ -17,6 +17,7 @@ def skill_open_app(task):
     app = task.get("app")
 
     if app:
+        print("Opening", app)
         open_application(app)
 
 
@@ -25,20 +26,24 @@ def skill_open_website(task):
     url = task.get("url")
 
     if url:
+        print("Opening website:", url)
         open_website(url)
 
 
 def skill_web_search(task):
 
     query = task.get("query")
-    site = task.get("site")
+    site = task.get("site", "google")
+
+    if not query:
+        return
 
     if site == "youtube":
 
         open_website("https://www.youtube.com")
         search_on_page(query)
 
-    elif site == "google":
+    else:
 
         open_website(f"https://www.google.com/search?q={query}")
 
