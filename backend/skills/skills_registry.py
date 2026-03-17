@@ -4,7 +4,7 @@ from browser.browser_agent import open_website, search_on_page
 from automation.file_manager import create_file, write_to_file
 from developer.terminal_engine import run_terminal_command
 from vision.ui_click import click_text
-from automation.typing_engine import type_text
+from automation.typing_engine import type_text, smart_type
 from automation.software_control import open_application
 
 # STEP 25
@@ -79,8 +79,14 @@ def skill_write_file(task):
 def skill_type_text(task):
 
     text = task.get("text")
+    window = task.get("window")
 
-    if text:
+    if not text:
+        return
+
+    if window:
+        smart_type(text, window)
+    else:
         type_text(text)
 
 
