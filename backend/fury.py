@@ -1,6 +1,29 @@
 from execution.task_planner import create_plan
 from execution.executor import execute_plan
 
+from brain.context_memory import memory
+
+
+# -----------------------------
+# PRINT MEMORY
+# -----------------------------
+
+def show_memory():
+
+    print("---- MEMORY ----")
+
+    print("App:", memory.get_app())
+    print("Window:", memory.get_window())
+    print("Site:", memory.get_site())
+    print("File:", memory.get_file())
+    print("Action:", memory.get_action())
+
+    print("----------------")
+
+
+# -----------------------------
+# MAIN LOOP
+# -----------------------------
 
 def start_fury():
 
@@ -11,21 +34,47 @@ def start_fury():
 
     while True:
 
-        command = input(">>> ")
+        command = input(">>> ").strip()
+
+        if not command:
+            continue
 
         if command.lower() == "exit":
             print("Shutting down Fury...")
             break
 
+        # -------------------------
+        # CREATE PLAN
+        # -------------------------
+
         plan = create_plan(command)
 
-        print("Execution Plan:")
+        print("\nExecution Plan:")
 
-        for step in plan:
-            print(step)
+        if isinstance(plan, dict):
+            print(plan)
+        else:
+            for step in plan:
+                print(step)
+
+        print()
+
+        # -------------------------
+        # EXECUTE
+        # -------------------------
 
         execute_plan(plan)
 
+        # -------------------------
+        # SHOW MEMORY
+        # -------------------------
+
+        show_memory()
+
+        print()
+
+
+# -----------------------------
 
 if __name__ == "__main__":
     start_fury()

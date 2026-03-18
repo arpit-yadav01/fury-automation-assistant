@@ -28,14 +28,20 @@ def split_command(command):
 # -----------------------------
 # helper — build workflow
 # -----------------------------
-
 def build_workflow(tasks):
 
     steps = []
 
-    for t in tasks:
+    i = 0
 
+    while i < len(tasks):
+
+        t = tasks[i]
         intent = t.get("intent")
+
+        # -----------------------
+        # OPEN APP
+        # -----------------------
 
         if intent == "open_app":
 
@@ -44,12 +50,62 @@ def build_workflow(tasks):
                 "name": t.get("app")
             })
 
+
+        # -----------------------
+        # OPEN WEBSITE
+        # -----------------------
+
+        elif intent == "open_website":
+
+            url = t.get("url")
+
+            steps.append({
+                "action": "open_url",
+                "url": url
+            })
+
+            # check next step for typing (search case)
+            if i + 1 < len(tasks):
+
+                next_task = tasks[i + 1]
+
+                if next_task.get("intent") == "type_text":
+
+                    text = next_task.get("text")
+
+                    steps.append({
+                        "action": "wait",
+                        "time": 3
+                    })
+
+                    steps.append({
+                        "action": "type",
+                        "text": text
+                    })
+
+                    steps.append({
+                        "action": "press",
+                        "key": "enter"
+                    })
+
+                    i += 1  # skip next task
+
+
+        # -----------------------
+        # TYPE
+        # -----------------------
+
         elif intent == "type_text":
 
             steps.append({
                 "action": "type",
                 "text": t.get("text")
             })
+
+
+        # -----------------------
+        # CREATE FILE
+        # -----------------------
 
         elif intent == "create_file":
 
@@ -58,6 +114,11 @@ def build_workflow(tasks):
                 "path": t.get("filename")
             })
 
+
+        # -----------------------
+        # TERMINAL
+        # -----------------------
+
         elif intent == "run_terminal":
 
             steps.append({
@@ -65,24 +126,22 @@ def build_workflow(tasks):
                 "cmd": t.get("command")
             })
 
-        elif intent == "open_website":
 
-            steps.append({
-                "action": "open_url",
-                "url": t.get("url")
-            })
+        # -----------------------
+        # FALLBACK
+        # -----------------------
 
         else:
 
-            # fallback to skill execution
             steps.append({
                 "action": "skill",
                 "intent": intent,
                 "data": t
             })
 
-    return {"workflow": steps}
+        i += 1
 
+    return {"workflow": steps}
 
 # -----------------------------
 # MAIN PLANNER

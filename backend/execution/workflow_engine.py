@@ -8,6 +8,9 @@ from automation.window_manager import focus_window
 from automation.file_manager import create_file
 
 from developer.terminal_engine import run_terminal_command
+from browser.browser_agent import open_website
+
+from brain.context_memory import memory
 
 
 def run_workflow(steps):
@@ -35,11 +38,36 @@ def run_workflow(steps):
 
                 open_application(name)
 
-                wait(2)
+                wait(3)
 
                 focus_window(name)
 
                 wait(1)
+
+                memory.set_app(name)
+                memory.set_window(name)
+                memory.set_action("open_app")
+
+
+            # -----------------------
+            # OPEN URL
+            # -----------------------
+            elif action == "open_url":
+
+                url = step["url"]
+
+                open_website(url)
+
+                wait(4)
+
+                focus_window("chrome")
+
+                wait(1)
+
+                memory.set_site(url)
+                memory.set_app("browser")
+                memory.set_window("chrome")
+                memory.set_action("open_website")
 
 
             # -----------------------
@@ -55,7 +83,58 @@ def run_workflow(steps):
             # -----------------------
             elif action == "type":
 
+                app = memory.get_app()
+
+                # ------------------
+                # BROWSER
+                # ------------------
+                if app == "browser":
+
+                    focus_window("chrome")
+                    wait(1)
+
+                    print("Browser detected, trying vision click")
+
+                    clicked = False
+
+                    try:
+                        from vision.ui_click import click_text_safe
+
+                        # try multiple labels
+                        for label in [
+                            "Search",
+                            "search",
+                            "Search YouTube",
+                            "YouTube",
+                            "Search Google"
+                        ]:
+
+                            if click_text_safe(label, retries=2):
+                                clicked = True
+                                break
+
+                    except Exception as e:
+                        print("Vision error:", e)
+
+                    if not clicked:
+                        print("Vision failed → fallback click")
+                        click()
+                        wait(1)
+
+                # ------------------
+                # NORMAL APP
+                # ------------------
+                else:
+
+                    win = memory.get_window()
+
+                    if win:
+                        focus_window(win)
+                        wait(1)
+
                 type_text(step["text"])
+
+                memory.set_action("type_text")
 
 
             # -----------------------
@@ -97,7 +176,12 @@ def run_workflow(steps):
             # -----------------------
             elif action == "create_file":
 
-                create_file(step["path"])
+                path = step["path"]
+
+                create_file(path)
+
+                memory.set_file(path)
+                memory.set_action("create_file")
 
 
             # -----------------------
@@ -106,6 +190,8 @@ def run_workflow(steps):
             elif action == "terminal":
 
                 run_terminal_command(step["cmd"])
+
+                memory.set_action("run_terminal")
 
 
             else:

@@ -20,35 +20,55 @@ from developer.dev_workflow import (
 
 
 # -------------------------
-# OLD SKILLS
+# OPEN APP
 # -------------------------
 
 def skill_open_app(task):
 
     app = task.get("app")
 
-    if app:
-        open_application(app)
-        memory.set_app(app)
-        memory.set_window(app)
-        memory.set_action("open_app")
+    if not app:
+        return
 
+    open_application(app)
+
+    memory.set_app(app)
+
+    # better window names
+    if app == "vscode":
+        memory.set_window("code")
+
+    elif app == "notepad":
+        memory.set_window("notepad")
+
+    else:
+        memory.set_window(app)
+
+    memory.set_action("open_app")
+
+
+# -------------------------
+# OPEN WEBSITE
+# -------------------------
 
 def skill_open_website(task):
 
     url = task.get("url")
 
-    if url:
-        open_website(url)
+    if not url:
+        return
 
-        if "youtube" in url:
-            memory.set_site("youtube")
+    open_website(url)
 
-        elif "google" in url:
-            memory.set_site("google")
+    memory.set_site(url)
+    memory.set_app("browser")
+    memory.set_window("chrome")
+    memory.set_action("open_website")
 
-        memory.set_action("open_website")
 
+# -------------------------
+# WEB SEARCH
+# -------------------------
 
 def skill_web_search(task):
 
@@ -70,16 +90,28 @@ def skill_web_search(task):
 
         open_website(url)
 
+    memory.set_action("web_search")
+
+
+# -------------------------
+# CREATE FILE
+# -------------------------
 
 def skill_create_file(task):
 
     filename = task.get("filename")
 
     if filename:
+
         create_file(filename)
+
         memory.set_file(filename)
         memory.set_action("create_file")
 
+
+# -------------------------
+# WRITE FILE
+# -------------------------
 
 def skill_write_file(task):
 
@@ -89,6 +121,10 @@ def skill_write_file(task):
     if filename and text:
         write_to_file(filename, text)
 
+
+# -------------------------
+# TYPE TEXT
+# -------------------------
 
 def skill_type_text(task):
 
@@ -106,6 +142,10 @@ def skill_type_text(task):
     memory.set_action("type_text")
 
 
+# -------------------------
+# TERMINAL
+# -------------------------
+
 def skill_run_terminal(task):
 
     command = task.get("command")
@@ -113,6 +153,12 @@ def skill_run_terminal(task):
     if command:
         run_terminal_command(command)
 
+        memory.set_action("run_terminal")
+
+
+# -------------------------
+# CLICK
+# -------------------------
 
 def skill_click_text(task):
 
@@ -165,7 +211,7 @@ def skill_dev_command(task):
 
 
 # -------------------------
-# SKILL MAP
+# MAP
 # -------------------------
 
 SKILLS = {

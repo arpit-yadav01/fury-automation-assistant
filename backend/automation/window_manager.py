@@ -7,22 +7,31 @@ import pygetwindow as gw
 # ---------------------------
 # EXISTING FUNCTION (KEEP)
 # ---------------------------
-
 def focus_window(window_name, timeout=5):
 
     print(f"Searching for window: {window_name}")
 
     start_time = time.time()
 
+    window_name = window_name.lower()
+
     while time.time() - start_time < timeout:
 
-        windows = gw.getWindowsWithTitle(window_name)
+        windows = gw.getAllWindows()
 
-        if windows:
-            window = windows[0]
-            window.activate()
-            print(f"Focused window: {window_name}")
-            return True
+        for w in windows:
+
+            title = w.title.lower()
+
+            # partial match instead of exact match
+            if window_name in title:
+
+                try:
+                    w.activate()
+                    print("Focused window:", w.title)
+                    return True
+                except:
+                    pass
 
         time.sleep(0.5)
 

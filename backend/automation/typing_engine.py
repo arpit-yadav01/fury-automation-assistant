@@ -8,16 +8,24 @@ from automation.window_manager import (
     focus_window,
 )
 
+from brain.context_memory import memory
+
 
 # -------------------------
-# BASIC TYPE (OLD)
+# BASIC TYPE
 # -------------------------
 
 def type_text(text):
 
-    print("Typing in 2 seconds...")
+    window = memory.get_window()
 
-    time.sleep(2)
+    if window:
+        print("Typing in window:", window)
+        focus_window(window)
+        time.sleep(1)
+
+    print("Typing in 1 second...")
+    time.sleep(1)
 
     pyautogui.write(text, interval=0.05)
 
@@ -28,21 +36,20 @@ def type_text(text):
 
 def smart_type(text, window=None, delay=1):
 
-    """
-    Smart typing:
-    - optionally focus window
-    - check active window
-    - wait before typing
-    """
-
     if window:
 
         print("Focusing window:", window)
-
         focus_window(window)
-
         time.sleep(1)
 
+    else:
+
+        mem_window = memory.get_window()
+
+        if mem_window:
+            print("Using memory window:", mem_window)
+            focus_window(mem_window)
+            time.sleep(1)
 
     active = get_active_window_title()
 
@@ -73,7 +80,7 @@ def type_in_window(window, text):
 
 
 # -------------------------
-# PRESS KEY
+# PRESS
 # -------------------------
 
 def press(key):
