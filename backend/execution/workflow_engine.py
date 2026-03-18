@@ -30,13 +30,23 @@ def run_workflow(steps):
             # OPEN APP
             # -----------------------
             if action == "open_app":
-                open_application(step["name"])
+
+                name = step["name"]
+
+                open_application(name)
+
+                wait(2)
+
+                focus_window(name)
+
+                wait(1)
 
 
             # -----------------------
             # WAIT
             # -----------------------
             elif action == "wait":
+
                 wait(step.get("time", 1))
 
 
@@ -44,6 +54,7 @@ def run_workflow(steps):
             # TYPE
             # -----------------------
             elif action == "type":
+
                 type_text(step["text"])
 
 
@@ -51,6 +62,7 @@ def run_workflow(steps):
             # PRESS
             # -----------------------
             elif action == "press":
+
                 press(step["key"])
 
 
@@ -58,6 +70,7 @@ def run_workflow(steps):
             # HOTKEY
             # -----------------------
             elif action == "hotkey":
+
                 hotkey(*step["keys"])
 
 
@@ -65,6 +78,7 @@ def run_workflow(steps):
             # CLICK
             # -----------------------
             elif action == "click":
+
                 click()
 
 
@@ -72,13 +86,17 @@ def run_workflow(steps):
             # FOCUS WINDOW
             # -----------------------
             elif action == "focus":
+
                 focus_window(step["title"])
+
+                wait(1)
 
 
             # -----------------------
             # CREATE FILE
             # -----------------------
             elif action == "create_file":
+
                 create_file(step["path"])
 
 
@@ -86,6 +104,7 @@ def run_workflow(steps):
             # TERMINAL
             # -----------------------
             elif action == "terminal":
+
                 run_terminal_command(step["cmd"])
 
 
