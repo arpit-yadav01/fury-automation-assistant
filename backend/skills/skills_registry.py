@@ -7,7 +7,8 @@ from vision.ui_click import click_text
 from automation.typing_engine import type_text, smart_type
 from automation.software_control import open_application
 
-# STEP 25
+from brain.context_memory import memory
+
 from developer.dev_workflow import (
     open_vscode,
     create_new_file,
@@ -28,6 +29,9 @@ def skill_open_app(task):
 
     if app:
         open_application(app)
+        memory.set_app(app)
+        memory.set_window(app)
+        memory.set_action("open_app")
 
 
 def skill_open_website(task):
@@ -36,6 +40,14 @@ def skill_open_website(task):
 
     if url:
         open_website(url)
+
+        if "youtube" in url:
+            memory.set_site("youtube")
+
+        elif "google" in url:
+            memory.set_site("google")
+
+        memory.set_action("open_website")
 
 
 def skill_web_search(task):
@@ -65,6 +77,8 @@ def skill_create_file(task):
 
     if filename:
         create_file(filename)
+        memory.set_file(filename)
+        memory.set_action("create_file")
 
 
 def skill_write_file(task):
@@ -89,6 +103,8 @@ def skill_type_text(task):
     else:
         type_text(text)
 
+    memory.set_action("type_text")
+
 
 def skill_run_terminal(task):
 
@@ -106,12 +122,11 @@ def skill_click_text(task):
         click_text(text)
 
 
-# =====================================================
-# STEP 25 DEV SKILLS
-# =====================================================
+# -------------------------
+# DEV SKILLS
+# -------------------------
 
 def skill_open_vscode(task):
-
     open_vscode()
 
 
@@ -131,7 +146,6 @@ def skill_write_code(task):
 
 
 def skill_save_file(task):
-
     save_file()
 
 
@@ -156,7 +170,6 @@ def skill_dev_command(task):
 
 SKILLS = {
 
-    # OLD
     "open_app": skill_open_app,
     "open_website": skill_open_website,
     "web_search": skill_web_search,
@@ -166,8 +179,6 @@ SKILLS = {
     "run_terminal": skill_run_terminal,
     "click_text": skill_click_text,
 
-
-    # STEP 25
     "open_vscode": skill_open_vscode,
     "create_code_file": skill_create_code_file,
     "write_code": skill_write_code,
