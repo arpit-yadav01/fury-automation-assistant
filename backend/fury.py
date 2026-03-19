@@ -3,6 +3,13 @@ from execution.executor import execute_plan
 
 from brain.context_memory import memory
 
+# STEP 31 / 32
+from voice.speech_to_text import listen_once
+from voice.text_to_speech import speak
+
+
+voice_mode = False
+
 
 # -----------------------------
 # PRINT MEMORY
@@ -22,26 +29,87 @@ def show_memory():
 
 
 # -----------------------------
+# GET COMMAND
+# -----------------------------
+
+def get_command():
+
+    global voice_mode
+
+    if voice_mode:
+
+        text = listen_once()
+
+        if text:
+            return text
+
+        return ""
+
+    else:
+
+        return input(">>> ").strip()
+
+
+# -----------------------------
 # MAIN LOOP
 # -----------------------------
 
 def start_fury():
 
+    global voice_mode
+
     print("=================================")
     print("🔥 FURY AI ASSISTANT STARTED")
     print("Type 'exit' to stop Fury")
+    print("Type 'voice mode' to enable mic")
     print("=================================")
 
     while True:
 
-        command = input(">>> ").strip()
+        command = get_command()
 
         if not command:
             continue
 
+        # -------------------------
+        # EXIT
+        # -------------------------
+
         if command.lower() == "exit":
+
+            speak("Shutting down")
+
             print("Shutting down Fury...")
+
             break
+
+        # -------------------------
+        # VOICE MODE ON
+        # -------------------------
+
+        if command.lower() == "voice mode":
+
+            voice_mode = True
+
+            speak("Voice mode activated")
+
+            print("Voice mode ON")
+
+            continue
+
+        # -------------------------
+        # VOICE MODE OFF
+        # -------------------------
+
+        if command.lower() == "text mode":
+
+            voice_mode = False
+
+            speak("Text mode activated")
+
+            print("Voice mode OFF")
+
+            continue
 
         # -------------------------
         # CREATE PLAN
@@ -63,10 +131,14 @@ def start_fury():
         # EXECUTE
         # -------------------------
 
+        speak("Executing")
+
         execute_plan(plan)
 
+        speak("Done")
+
         # -------------------------
-        # SHOW MEMORY
+        # MEMORY
         # -------------------------
 
         show_memory()
