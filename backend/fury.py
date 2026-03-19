@@ -1,6 +1,6 @@
 from execution.task_planner import create_plan
 from execution.executor import execute_plan
-
+from execution.auto_loop import run_autonomous
 from brain.context_memory import memory
 
 # STEP 31 / 32
@@ -108,6 +108,21 @@ def start_fury():
             speak("Text mode activated")
 
             print("Voice mode OFF")
+
+            continue
+
+
+                # -------------------------
+        # AUTO MODE
+        # -------------------------
+
+        if command.startswith("auto "):
+
+            goal = command.replace("auto ", "")
+
+            speak("Autonomous mode")
+
+            run_autonomous(goal)
 
             continue
 
