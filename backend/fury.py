@@ -2,14 +2,15 @@ from execution.task_planner import create_plan
 from execution.executor import execute_plan
 from execution.auto_loop import run_autonomous
 from execution.goal_engine import run_goal
+
 from brain.context_memory import memory
 
-# STEP 31 / 32
 from voice.speech_to_text import listen_once
 from voice.text_to_speech import speak
 
 
 voice_mode = False
+jarvis_mode = False
 
 
 # -----------------------------
@@ -35,20 +36,17 @@ def show_memory():
 
 def get_command():
 
-    global voice_mode
+    global voice_mode, jarvis_mode
+
+    if jarvis_mode:
+        text = listen_once()
+        return text if text else ""
 
     if voice_mode:
-
         text = listen_once()
+        return text if text else ""
 
-        if text:
-            return text
-
-        return ""
-
-    else:
-
-        return input(">>> ").strip()
+    return input(">>> ").strip()
 
 
 # -----------------------------
@@ -57,12 +55,11 @@ def get_command():
 
 def start_fury():
 
-    global voice_mode
+    global voice_mode, jarvis_mode
 
     print("=================================")
     print("🔥 FURY AI ASSISTANT STARTED")
-    print("Type 'exit' to stop Fury")
-    print("Type 'voice mode' to enable mic")
+    print("voice mode / jarvis mode / exit")
     print("=================================")
 
     while True:
@@ -72,48 +69,70 @@ def start_fury():
         if not command:
             continue
 
+        cmd = command.lower()
+
+
         # -------------------------
         # EXIT
         # -------------------------
 
-        if command.lower() == "exit":
+        if cmd == "exit":
 
             speak("Shutting down")
 
-            print("Shutting down Fury...")
+            print("Shutting down Fury")
 
             break
 
+
         # -------------------------
-        # VOICE MODE ON
+        # VOICE MODE
         # -------------------------
 
-        if command.lower() == "voice mode":
+        if cmd == "voice mode":
 
             voice_mode = True
+            jarvis_mode = False
 
             speak("Voice mode activated")
 
-            print("Voice mode ON")
-
             continue
 
-        # -------------------------
-        # VOICE MODE OFF
-        # -------------------------
 
-        if command.lower() == "text mode":
+        if cmd == "text mode":
 
             voice_mode = False
+            jarvis_mode = False
 
-            speak("Text mode activated")
-
-            print("Voice mode OFF")
+            speak("Text mode")
 
             continue
 
 
-                # -------------------------
+        # -------------------------
+        # JARVIS MODE
+        # -------------------------
+
+        if cmd == "jarvis mode":
+
+            jarvis_mode = True
+            voice_mode = False
+
+            speak("Jarvis mode activated")
+
+            continue
+
+
+        if cmd == "stop jarvis":
+
+            jarvis_mode = False
+
+            speak("Jarvis stopped")
+
+            continue
+
+
+        # -------------------------
         # GOAL MODE
         # -------------------------
 
@@ -128,7 +147,7 @@ def start_fury():
             continue
 
 
-                # -------------------------
+        # -------------------------
         # AUTO MODE
         # -------------------------
 
@@ -142,8 +161,9 @@ def start_fury():
 
             continue
 
+
         # -------------------------
-        # CREATE PLAN
+        # NORMAL EXECUTION
         # -------------------------
 
         plan = create_plan(command)
@@ -156,25 +176,13 @@ def start_fury():
             for step in plan:
                 print(step)
 
-        print()
-
-        # -------------------------
-        # EXECUTE
-        # -------------------------
-
         speak("Executing")
 
         execute_plan(plan)
 
         speak("Done")
 
-        # -------------------------
-        # MEMORY
-        # -------------------------
-
         show_memory()
-
-        print()
 
 
 # -----------------------------
