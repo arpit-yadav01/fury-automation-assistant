@@ -39,54 +39,38 @@ def apply_context(task):
     app = memory.get_app()
     site = memory.get_site()
 
-    # -------------------------
-    # TYPE TEXT CONTEXT
-    # -------------------------
+    # TYPE CONTEXT
 
     if intent == "type_text":
 
-        # if last site exists → convert to search
-        if site:
-
-            if "youtube" in site:
-                task["intent"] = "web_search"
-                task["site"] = "youtube"
-                task["query"] = task.get("text")
-                return task
-
-            if "google" in site:
-                task["intent"] = "web_search"
-                task["site"] = "google"
-                task["query"] = task.get("text")
-                return task
-
-        # otherwise normal typing
         if win:
             task["window"] = win
+
+        elif app == "browser":
+            task["window"] = "chrome"
+
         elif app:
             task["window"] = app
 
-    # -------------------------
     # TERMINAL CONTEXT
-    # -------------------------
 
     if intent == "run_terminal":
 
         if win:
             task["window"] = win
+
+        elif app == "browser":
+            task["window"] = "chrome"
+
         elif app:
             task["window"] = app
 
-    # -------------------------
     # SEARCH CONTEXT
-    # -------------------------
 
     if intent == "web_search":
 
-        if not task.get("site"):
-
-            if site:
-                task["site"] = site
+        if not task.get("site") and site:
+            task["site"] = site
 
     return task
 
@@ -109,6 +93,9 @@ def build_workflow(tasks):
 
         intent = t.get("intent")
 
+        last_app = memory.get_app()
+        last_site = memory.get_site()
+
         # -----------------------
         # OPEN APP
         # -----------------------
@@ -120,18 +107,18 @@ def build_workflow(tasks):
                 "name": t.get("app")
             })
 
+
         # -----------------------
         # OPEN WEBSITE
         # -----------------------
 
         elif intent == "open_website":
 
-            url = t.get("url")
-
             steps.append({
                 "action": "open_url",
-                "url": url
+                "url": t.get("url")
             })
+
 
         # -----------------------
         # TYPE
@@ -140,9 +127,17 @@ def build_workflow(tasks):
         elif intent == "type_text":
 
             steps.append({
-                "action": "type",
-                "text": t.get("text")
-            })
+            "action": "type",
+            "text": t.get("text")
+    })
+
+    # FIX → press enter if browser OR site exists OR website opened in same command
+            if last_app == "browser" or last_site or intent == "type_text":
+                steps.append({
+                "action": "press",
+                "key": "enter"
+        })
+
 
         # -----------------------
         # CREATE FILE
@@ -155,6 +150,7 @@ def build_workflow(tasks):
                 "path": t.get("filename")
             })
 
+
         # -----------------------
         # TERMINAL
         # -----------------------
@@ -165,6 +161,7 @@ def build_workflow(tasks):
                 "action": "terminal",
                 "cmd": t.get("command")
             })
+
 
         # -----------------------
         # SEARCH
@@ -204,9 +201,6 @@ def build_workflow(tasks):
                     "url": f"https://www.google.com/search?q={query}"
                 })
 
-        # -----------------------
-        # FALLBACK
-        # -----------------------
 
         else:
 
@@ -229,27 +223,15 @@ def create_plan(command):
 
     command = command.strip()
 
-    # -----------------------------
-    # 1. AI interpreter
-    # -----------------------------
-
     ai_result = interpret_command(command)
 
     if ai_result:
         return [apply_context(ai_result)]
 
-    # -----------------------------
-    # 2. LLM
-    # -----------------------------
-
     llm_tasks = interpret_with_llm(command)
 
     if llm_tasks:
         return [apply_context(t) for t in llm_tasks]
-
-    # -----------------------------
-    # 3. split command
-    # -----------------------------
 
     parts = split_command(command)
 
@@ -263,16 +245,8 @@ def create_plan(command):
             task = apply_context(task)
             tasks.append(task)
 
-    # -----------------------------
-    # single
-    # -----------------------------
-
     if len(tasks) == 1:
         return tasks
-
-    # -----------------------------
-    # workflow
-    # -----------------------------
 
     if len(tasks) > 1:
 

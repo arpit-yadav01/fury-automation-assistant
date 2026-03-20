@@ -1,6 +1,5 @@
-# skills/skill_manager.py
-
 from skills.skills_registry import SKILLS
+from brain.context_memory import memory
 
 
 def execute_skill(task):
@@ -16,9 +15,15 @@ def execute_skill(task):
         return False
 
     try:
+
         skill(task)
+
+        memory.set_action(intent)
+
         return True
 
     except Exception as e:
+
         print("Skill error:", e)
+
         return False

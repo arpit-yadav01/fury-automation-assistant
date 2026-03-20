@@ -2,8 +2,12 @@
 
 from skills.skill_manager import execute_skill
 
-# STEP 24
 from execution.workflow_engine import run_workflow
+
+from brain.context_memory import memory
+
+
+MAX_RETRY = 2
 
 
 def execute_plan(plan):
@@ -14,14 +18,34 @@ def execute_plan(plan):
 
 
     # -----------------------------
-    # STEP 24 — WORKFLOW SUPPORT
+    # WORKFLOW SUPPORT
     # -----------------------------
 
     if isinstance(plan, dict) and "workflow" in plan:
 
-        print("Executing workflow")
+        retry = 0
 
-        run_workflow(plan["workflow"])
+        while retry <= MAX_RETRY:
+
+            try:
+
+                print("Executing workflow")
+
+                run_workflow(plan["workflow"])
+
+                memory.set_action("workflow")
+
+                return
+
+            except Exception as e:
+
+                print("Workflow error:", e)
+
+                retry += 1
+
+                print("Retry:", retry)
+
+        print("Workflow failed")
 
         return
 
@@ -41,8 +65,22 @@ def execute_plan(plan):
             continue
 
 
-        executed = execute_skill(task)
+        retry = 0
 
+        while retry <= MAX_RETRY:
 
-        if not executed:
-            print("Unknown task:", task)
+            executed = execute_skill(task)
+
+            if executed:
+
+                memory.set_action(task.get("intent"))
+
+                break
+
+            retry += 1
+
+            print("Retry:", retry)
+
+        if retry > MAX_RETRY:
+
+            print("Failed task:", task)

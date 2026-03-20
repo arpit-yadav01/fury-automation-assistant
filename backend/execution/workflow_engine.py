@@ -1,5 +1,3 @@
-# execution/workflow_engine.py
-
 import time
 
 from automation.ui_engine import type_text, press, hotkey, wait, click
@@ -11,6 +9,10 @@ from developer.terminal_engine import run_terminal_command
 from browser.browser_agent import open_website
 
 from brain.context_memory import memory
+from skills.skill_manager import execute_skill
+
+
+MAX_STEP_RETRY = 2
 
 
 def run_workflow(steps):
@@ -23,180 +25,200 @@ def run_workflow(steps):
 
     for step in steps:
 
-        action = step.get("action")
+        retry = 0
 
-        print("STEP:", step)
+        while retry <= MAX_STEP_RETRY:
 
-        try:
+            try:
 
-            # -----------------------
-            # OPEN APP
-            # -----------------------
-            if action == "open_app":
+                action = step.get("action")
 
-                name = step["name"]
+                print("STEP:", step)
 
-                open_application(name)
+                # -----------------------
+                # OPEN APP
+                # -----------------------
+                if action == "open_app":
 
-                wait(3)
+                    name = step["name"]
 
-                focus_window(name)
+                    open_application(name)
 
-                wait(1)
+                    wait(3)
 
-                memory.set_app(name)
-                memory.set_window(name)
-                memory.set_action("open_app")
+                    focus_window(name)
 
+                    memory.set_app(name)
+                    memory.set_window(name)
+                    memory.set_action("open_app")
 
-            # -----------------------
-            # OPEN URL
-            # -----------------------
-            elif action == "open_url":
-
-                url = step["url"]
-
-                open_website(url)
-
-                wait(4)
-
-                focus_window("chrome")
-
-                wait(1)
-
-                memory.set_site(url)
-                memory.set_app("browser")
-                memory.set_window("chrome")
-                memory.set_action("open_website")
+                    break
 
 
-            # -----------------------
-            # WAIT
-            # -----------------------
-            elif action == "wait":
+                # -----------------------
+                # OPEN URL
+                # -----------------------
+                elif action == "open_url":
 
-                wait(step.get("time", 1))
+                    url = step["url"]
 
+                    open_website(url)
 
-            # -----------------------
-            # TYPE
-            # -----------------------
-            elif action == "type":
-
-                app = memory.get_app()
-
-                # ------------------
-                # BROWSER
-                # ------------------
-                if app == "browser":
+                    wait(4)
 
                     focus_window("chrome")
-                    wait(1)
 
-                    print("Browser detected, trying vision click")
+                    memory.set_site(
+                        "youtube" if "youtube" in url else "google"
+                    )
+                    memory.set_app("browser")
+                    memory.set_window("chrome")
+                    memory.set_action("open_website")
 
-                    clicked = False
+                    break
 
-                    try:
-                        from vision.ui_click import click_text_safe
 
-                        # try multiple labels
-                        for label in [
-                            "Search",
-                            "search",
-                            "Search YouTube",
-                            "YouTube",
-                            "Search Google"
-                        ]:
+                # -----------------------
+                # WAIT
+                # -----------------------
+                elif action == "wait":
 
-                            if click_text_safe(label, retries=2):
-                                clicked = True
-                                break
+                    wait(step.get("time", 1))
+                    break
 
-                    except Exception as e:
-                        print("Vision error:", e)
 
-                    if not clicked:
-                        print("Vision failed → fallback click")
-                        click()
+                # -----------------------
+                # TYPE
+                # -----------------------
+                elif action == "type":
+
+                    app = memory.get_app()
+
+                    if app == "browser":
+
+                        focus_window("chrome")
                         wait(1)
 
-                # ------------------
-                # NORMAL APP
-                # ------------------
+                        clicked = False
+
+                        try:
+
+                            from vision.ui_click import click_text_safe
+
+                            for label in [
+                                "Search",
+                                "search",
+                                "Search YouTube",
+                                "Search Google",
+                            ]:
+
+                                if click_text_safe(label, retries=2):
+                                    clicked = True
+                                    break
+
+                        except Exception:
+                            pass
+
+                        if not clicked:
+                            click()
+
+                    else:
+
+                        win = memory.get_window()
+
+                        if win:
+                            focus_window(win)
+                            wait(1)
+
+                    type_text(step["text"])
+
+                    memory.set_action("type_text")
+
+                    break
+
+
+                # -----------------------
+                # PRESS
+                # -----------------------
+                elif action == "press":
+
+                    press(step["key"])
+                    break
+
+
+                # -----------------------
+                # HOTKEY
+                # -----------------------
+                elif action == "hotkey":
+
+                    hotkey(*step["keys"])
+                    break
+
+
+                # -----------------------
+                # CLICK
+                # -----------------------
+                elif action == "click":
+
+                    click()
+                    break
+
+
+                # -----------------------
+                # CREATE FILE
+                # -----------------------
+                elif action == "create_file":
+
+                    path = step["path"]
+
+                    create_file(path)
+
+                    memory.set_file(path)
+                    memory.set_action("create_file")
+
+                    break
+
+
+                # -----------------------
+                # TERMINAL
+                # -----------------------
+                elif action == "terminal":
+
+                    run_terminal_command(step["cmd"])
+
+                    memory.set_action("run_terminal")
+
+                    break
+
+
+                # -----------------------
+                # SKILL FALLBACK
+                # -----------------------
+                elif action == "skill":
+
+                    task = step.get("data")
+
+                    if task:
+
+                        ok = execute_skill(task)
+
+                        if ok:
+                            break
+
+                    raise Exception("Skill failed")
+
+
                 else:
 
-                    win = memory.get_window()
-
-                    if win:
-                        focus_window(win)
-                        wait(1)
-
-                type_text(step["text"])
-
-                memory.set_action("type_text")
+                    raise Exception("Unknown action")
 
 
-            # -----------------------
-            # PRESS
-            # -----------------------
-            elif action == "press":
+            except Exception as e:
 
-                press(step["key"])
+                retry += 1
 
+                print("Step error:", e, "Retry:", retry)
 
-            # -----------------------
-            # HOTKEY
-            # -----------------------
-            elif action == "hotkey":
-
-                hotkey(*step["keys"])
-
-
-            # -----------------------
-            # CLICK
-            # -----------------------
-            elif action == "click":
-
-                click()
-
-
-            # -----------------------
-            # FOCUS WINDOW
-            # -----------------------
-            elif action == "focus":
-
-                focus_window(step["title"])
-
-                wait(1)
-
-
-            # -----------------------
-            # CREATE FILE
-            # -----------------------
-            elif action == "create_file":
-
-                path = step["path"]
-
-                create_file(path)
-
-                memory.set_file(path)
-                memory.set_action("create_file")
-
-
-            # -----------------------
-            # TERMINAL
-            # -----------------------
-            elif action == "terminal":
-
-                run_terminal_command(step["cmd"])
-
-                memory.set_action("run_terminal")
-
-
-            else:
-                print("Unknown action:", action)
-
-
-        except Exception as e:
-            print("Workflow error:", e)
+                if retry > MAX_STEP_RETRY:
+                    print("Skipping step")
+                    break
