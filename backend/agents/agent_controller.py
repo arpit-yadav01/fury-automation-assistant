@@ -13,13 +13,31 @@ class AgentController:
     def execute(self, plan):
 
         if not plan:
-            print("No plan")
             return
+
+        # raw text → planner agent
+
+        if isinstance(plan, str):
+
+            agent = registry.find_agent(plan)
+
+            if agent:
+
+                new_plan = agent.handle(plan)
+
+                if new_plan:
+                    self.execute(new_plan)
+
+            return
+
+        # workflow dict
 
         if isinstance(plan, dict) and "workflow" in plan:
 
             self._execute_workflow(plan["workflow"])
             return
+
+        # list of tasks
 
         if isinstance(plan, dict):
             plan = [plan]
