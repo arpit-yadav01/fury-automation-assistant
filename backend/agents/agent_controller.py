@@ -57,9 +57,24 @@ class AgentController:
             print("No agent for task:", task)
             return
 
-        print("Agent:", agent.name)
+        try:
 
-        agent.handle(task)
+            print("Agent:", agent.name)
+
+            agent.handle(task)
+
+        except Exception as e:
+
+            print("Agent error:", e)
+
+            from agents.error_agent import ErrorRecoveryAgent
+
+            err = ErrorRecoveryAgent()
+
+            ok = err.handle_error(task, e)
+
+            if not ok:
+                print("Task failed:", task)
 
     # -------------------------
 
@@ -74,9 +89,24 @@ class AgentController:
                 print("No agent for step:", step)
                 continue
 
-            print("Agent:", agent.name)
+            try:
 
-            agent.handle(step)
+                print("Agent:", agent.name)
+
+                agent.handle(step)
+
+            except Exception as e:
+
+                print("Agent error:", e)
+
+                from agents.error_agent import ErrorRecoveryAgent
+
+                err = ErrorRecoveryAgent()
+
+                ok = err.handle_error(step, e)
+
+                if not ok:
+                    print("Step failed:", step)
 
 
 # global controller

@@ -7,6 +7,9 @@ from agents.browser_agent import BrowserAgent
 from agents.terminal_agent import TerminalAgent
 from agents.window_agent import WindowAgent
 from agents.file_agent import FileAgent
+from agents.skill_agent import SkillAgent
+from agents.context_agent import ContextTrackingAgent
+from agents.app_agent import AppDetectionAgent
 from agents.executor_agent import ExecutorAgent
 from agents.memory_agent import MemoryAgent
 
@@ -14,6 +17,10 @@ from agents.memory_agent import MemoryAgent
 def register_all_agents():
 
     registry.register(PlannerAgent())
+
+    registry.register(ContextTrackingAgent())
+
+    registry.register(AppDetectionAgent())
 
     registry.register(WorkflowAgent())
 
@@ -26,6 +33,8 @@ def register_all_agents():
     registry.register(WindowAgent())
 
     registry.register(FileAgent())
+
+    registry.register(SkillAgent())
 
     registry.register(ExecutorAgent())
 
