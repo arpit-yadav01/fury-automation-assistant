@@ -5,6 +5,8 @@ from agents.context_agent import ContextTrackingAgent
 from agents.app_agent import AppDetectionAgent
 from agents.api_agent import APIAgent
 from agents.rag_agent import RAGAgent
+from agents.code_agent import CodeAgent
+from agents.text_agent import TextAgent
 from agents.workflow_agent import WorkflowAgent
 from agents.ui_agent import UIAgent
 from agents.browser_agent import BrowserAgent
@@ -27,6 +29,10 @@ def register_all_agents():
     registry.register(APIAgent())
 
     registry.register(RAGAgent())
+
+    registry.register(CodeAgent())
+
+    registry.register(TextAgent())
 
     registry.register(WorkflowAgent())
 
