@@ -197,7 +197,6 @@
 
 
 
-
 from execution.task_planner import create_plan
 from execution.executor import execute_plan
 from execution.auto_loop import run_autonomous
@@ -209,9 +208,10 @@ from voice.speech_to_text import listen_once
 from voice.text_to_speech import speak
 
 
-# ✅ STEP 42 IMPORTS
+# ✅ AGENT IMPORTS
 from agents.register_agents import register_all_agents
 from agents.agent_controller import controller
+from agents.jarvis_controller import jarvis
 
 
 voice_mode = False
@@ -267,7 +267,7 @@ def start_fury():
     print("voice mode / jarvis mode / exit")
     print("=================================")
 
-    # ✅ STEP 42 REGISTER AGENTS
+    # ✅ REGISTER AGENTS
     register_all_agents()
 
     while True:
@@ -278,7 +278,6 @@ def start_fury():
             continue
 
         cmd = command.lower()
-
 
         # -------------------------
         # EXIT
@@ -318,7 +317,7 @@ def start_fury():
 
 
         # -------------------------
-        # JARVIS MODE
+        # JARVIS MODE (UPDATED)
         # -------------------------
 
         if cmd == "jarvis mode":
@@ -327,6 +326,19 @@ def start_fury():
             voice_mode = False
 
             speak("Jarvis mode activated")
+
+            while jarvis_mode:
+
+                text = listen_once()
+
+                if not text:
+                    continue
+
+                if text == "stop jarvis":
+                    jarvis_mode = False
+                    break
+
+                jarvis.run_loop(text)
 
             continue
 
@@ -341,7 +353,7 @@ def start_fury():
 
 
         # -------------------------
-        # GOAL MODE
+        # GOAL MODE (UPDATED)
         # -------------------------
 
         if command.startswith("goal "):
@@ -350,7 +362,7 @@ def start_fury():
 
             speak("Goal mode")
 
-            run_goal(goal)
+            jarvis.run_loop(goal)
 
             continue
 
@@ -386,7 +398,6 @@ def start_fury():
 
         speak("Executing")
 
-        # ✅ STEP 42 CHANGE
         controller.execute(plan)
 
         speak("Done")

@@ -7,6 +7,8 @@ from agents.api_agent import APIAgent
 from agents.rag_agent import RAGAgent
 from agents.code_agent import CodeAgent
 from agents.text_agent import TextAgent
+from agents.voice_agent import VoiceAgent
+from agents.vision_agent import VisionAgent
 from agents.workflow_agent import WorkflowAgent
 from agents.ui_agent import UIAgent
 from agents.browser_agent import BrowserAgent
@@ -33,6 +35,10 @@ def register_all_agents():
     registry.register(CodeAgent())
 
     registry.register(TextAgent())
+
+    registry.register(VoiceAgent())
+
+    registry.register(VisionAgent())
 
     registry.register(WorkflowAgent())
 
