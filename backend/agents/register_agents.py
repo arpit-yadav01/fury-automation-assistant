@@ -5,6 +5,18 @@ from agents.context_agent import ContextTrackingAgent
 from agents.app_agent import AppDetectionAgent
 from agents.api_agent import APIAgent
 from agents.rag_agent import RAGAgent
+from agents.rag_memory_agent import RAGMemoryAgent
+from agents.skill_db_agent import SkillDBAgent
+from agents.message_agent import MessageAgent
+from agents.skill_learning_agent import SkillLearningAgent
+from agents.skill_exec_agent import SkillExecAgent
+from agents.graph_planner_agent import GraphPlannerAgent
+from agents.observer_agent import ObserverAgent
+from agents.error_analyzer_agent import ErrorAnalyzerAgent
+from agents.plugin_agent import PluginAgent
+from agents.vision_reasoner_agent import VisionReasonerAgent
+from agents.dev_agent import DevAgent
+from agents.auto_agent import AutoAgent
 from agents.code_agent import CodeAgent
 from agents.text_agent import TextAgent
 from agents.voice_agent import VoiceAgent
@@ -19,6 +31,11 @@ from agents.skill_agent import SkillAgent
 from agents.executor_agent import ExecutorAgent
 from agents.memory_agent import MemoryAgent
 
+# ✅ NEW IMPORTS (STEP 73–75)
+from agents.self_improve_agent import SelfImproveAgent
+from agents.session_agent import SessionAgent
+from agents.final_core_agent import FinalCoreAgent
+
 
 def register_all_agents():
 
@@ -31,6 +48,30 @@ def register_all_agents():
     registry.register(APIAgent())
 
     registry.register(RAGAgent())
+
+    registry.register(RAGMemoryAgent())
+
+    registry.register(SkillDBAgent())
+
+    registry.register(MessageAgent())
+
+    registry.register(SkillLearningAgent())
+
+    registry.register(SkillExecAgent())
+
+    registry.register(GraphPlannerAgent())
+
+    registry.register(ObserverAgent())
+
+    registry.register(ErrorAnalyzerAgent())
+
+    registry.register(PluginAgent())
+
+    registry.register(VisionReasonerAgent())
+
+    registry.register(DevAgent())
+
+    registry.register(AutoAgent())
 
     registry.register(CodeAgent())
 
@@ -57,3 +98,11 @@ def register_all_agents():
     registry.register(ExecutorAgent())
 
     registry.register(MemoryAgent())
+
+    # ✅ STEP 73–75 ADDED
+
+    registry.register(SelfImproveAgent())
+
+    registry.register(SessionAgent())
+
+    registry.register(FinalCoreAgent())
