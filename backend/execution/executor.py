@@ -84,3 +84,5 @@ def execute_plan(plan):
         if retry > MAX_RETRY:
 
             print("Failed task:", task)
+
+            

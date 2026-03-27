@@ -1,197 +1,22 @@
-# # brain/command_parser.py
-
-# from brain.ai_interpreter import interpret_command
-# from brain.llm_brain import interpret_with_llm
-
-
-# def parse_command(command):
-
-#     command = command.lower().strip()
-
-#     # -----------------------------
-#     # WEBSITE COMMANDS (SPECIFIC FIRST)
-#     # -----------------------------
-
-#     if command == "open google":
-#         return {
-#             "intent": "open_website",
-#             "url": "https://www.google.com"
-#         }
-
-#     if command == "open youtube":
-#         return {
-#             "intent": "open_website",
-#             "url": "https://www.youtube.com"
-#         }
-
-#     if command.startswith("search "):
-
-#         query = command.replace("search", "").strip()
-
-#         return {
-#             "intent": "web_search",
-#             "site": "google",
-#             "query": query
-#         }
-
-#     # -----------------------------
-#     # CODE GENERATION
-#     # -----------------------------
-
-#     if "hello world" in command and "python" in command:
-
-#         return {
-#             "intent": "generate_code",
-#             "language": "python",
-#             "task": "hello_world"
-#         }
-
-#     # -----------------------------
-#     # TEXT TYPING
-#     # -----------------------------
-
-#     if command.startswith("type ") or command.startswith("write "):
-
-#         text = command.split(" ", 1)[1]
-
-#         return {
-#             "intent": "type_text",
-#             "text": text
-#         }
-
-#     # -----------------------------
-#     # FILE CREATION
-#     # -----------------------------
-
-#     if command.startswith("create file"):
-
-#         words = command.split()
-
-#         if len(words) >= 3:
-
-#             filename = words[2]
-
-#             return {
-#                 "intent": "create_file",
-#                 "filename": filename
-#             }
-
-#     if "create python file" in command:
-
-#         return {
-#             "intent": "create_file",
-#             "filename": "main.py"
-#         }
-
-#     # -----------------------------
-#     # TERMINAL COMMANDS
-#     # -----------------------------
-
-#     if command.startswith("run command"):
-
-#         cmd = command.replace("run command", "").strip()
-
-#         return {
-#             "intent": "run_terminal",
-#             "command": cmd
-#         }
-
-#     if command.startswith("run python file"):
-
-#         filename = command.replace("run python file", "").strip()
-
-#         return {
-#             "intent": "run_terminal",
-#             "command": f"python {filename}"
-#         }
-
-#     if command.startswith("pip install"):
-
-#         return {
-#             "intent": "run_terminal",
-#             "command": command
-#         }
-
-#     # -----------------------------
-#     # DEV WORKFLOWS
-#     # -----------------------------
-
-#     if command.startswith("create react app"):
-
-#         words = command.split()
-
-#         if len(words) >= 4:
-
-#             project_name = words[3]
-
-#             return {
-#                 "intent": "run_terminal",
-#                 "command": f"npx create-react-app {project_name}"
-#             }
-
-#     if command == "npm install":
-
-#         return {
-#             "intent": "run_terminal",
-#             "command": "npm install"
-#         }
-
-#     if command == "npm start":
-
-#         return {
-#             "intent": "run_terminal",
-#             "command": "npm start"
-#         }
-
-#     # -----------------------------
-#     # OPEN APP (GENERIC LAST)
-#     # -----------------------------
-
-#     if command.startswith("open"):
-
-#         words = command.split(maxsplit=1)
-
-#         if len(words) > 1:
-
-#             app = words[1]
-
-#             return {
-#                 "intent": "open_app",
-#                 "app": app
-#             }
-
-#     # -----------------------------
-#     # AI INTERPRETER FALLBACK
-#     # -----------------------------
-
-#     ai_result = interpret_command(command)
-
-#     if ai_result:
-#         return ai_result
-
-#     # -----------------------------
-#     # LLM FALLBACK (OPTIONAL)
-#     # -----------------------------
-
-#     llm_result = interpret_with_llm(command)
-
-#     if llm_result:
-#         return llm_result
-
-#     # -----------------------------
-#     # UNKNOWN
-#     # -----------------------------
-
-#     return {"intent": "unknown"}
-
-
-
 from brain.ai_interpreter import interpret_command
 from brain.llm_brain import interpret_with_llm
 
 
+def _attach_raw(result, command):
+    """helper to attach raw text"""
+    if not isinstance(result, dict):
+        return None
+
+    result["raw"] = command
+    return result
+
+
 def parse_command(command):
 
+    if not command:
+        return {"intent": "unknown", "raw": ""}
+
+    original = command
     command = command.lower().strip()
 
     # -----------------------------
@@ -199,16 +24,22 @@ def parse_command(command):
     # -----------------------------
 
     if command == "open google":
-        return {
-            "intent": "open_website",
-            "url": "https://www.google.com",
-        }
+        return _attach_raw(
+            {
+                "intent": "open_website",
+                "url": "https://www.google.com",
+            },
+            original,
+        )
 
     if command == "open youtube":
-        return {
-            "intent": "open_website",
-            "url": "https://www.youtube.com",
-        }
+        return _attach_raw(
+            {
+                "intent": "open_website",
+                "url": "https://www.youtube.com",
+            },
+            original,
+        )
 
     # -----------------------------
     # SEARCH
@@ -218,24 +49,30 @@ def parse_command(command):
 
         query = command.replace("search", "").strip()
 
-        return {
-            "intent": "web_search",
-            "site": "google",
-            "query": query,
-        }
+        return _attach_raw(
+            {
+                "intent": "web_search",
+                "site": "google",
+                "query": query,
+            },
+            original,
+        )
 
     # -----------------------------
-    # DEV COMMANDS (FIX-B)
+    # DEV COMMANDS
     # -----------------------------
 
     if command.startswith("dev "):
 
         cmd = command.replace("dev", "").strip()
 
-        return {
-            "intent": "dev",
-            "dev": cmd,
-        }
+        return _attach_raw(
+            {
+                "intent": "dev",
+                "dev": cmd,
+            },
+            original,
+        )
 
     # -----------------------------
     # GENERATE CODE
@@ -252,18 +89,20 @@ def parse_command(command):
             language = "java"
 
         task = command
-
         task = task.replace("generate", "")
         task = task.replace("code", "")
         task = task.replace("in", "")
         task = task.replace(language, "")
         task = task.strip()
 
-        return {
-            "intent": "generate_code",
-            "language": language,
-            "task": task,
-        }
+        return _attach_raw(
+            {
+                "intent": "generate_code",
+                "language": language,
+                "task": task,
+            },
+            original,
+        )
 
     # -----------------------------
     # TYPE / WRITE
@@ -273,10 +112,13 @@ def parse_command(command):
 
         text = command.split(" ", 1)[1]
 
-        return {
-            "intent": "type_text",
-            "text": text,
-        }
+        return _attach_raw(
+            {
+                "intent": "type_text",
+                "text": text,
+            },
+            original,
+        )
 
     # -----------------------------
     # CREATE FILE
@@ -290,17 +132,23 @@ def parse_command(command):
 
             filename = words[2]
 
-            return {
-                "intent": "create_file",
-                "filename": filename,
-            }
+            return _attach_raw(
+                {
+                    "intent": "create_file",
+                    "filename": filename,
+                },
+                original,
+            )
 
     if "create python file" in command:
 
-        return {
-            "intent": "create_file",
-            "filename": "main.py",
-        }
+        return _attach_raw(
+            {
+                "intent": "create_file",
+                "filename": "main.py",
+            },
+            original,
+        )
 
     # -----------------------------
     # TERMINAL
@@ -310,17 +158,23 @@ def parse_command(command):
 
         cmd = command.replace("run command", "").strip()
 
-        return {
-            "intent": "run_terminal",
-            "command": cmd,
-        }
+        return _attach_raw(
+            {
+                "intent": "run_terminal",
+                "command": cmd,
+            },
+            original,
+        )
 
     if command.startswith("pip install"):
 
-        return {
-            "intent": "run_terminal",
-            "command": command,
-        }
+        return _attach_raw(
+            {
+                "intent": "run_terminal",
+                "command": command,
+            },
+            original,
+        )
 
     # -----------------------------
     # OPEN APP
@@ -331,28 +185,37 @@ def parse_command(command):
         app = command.replace("open", "").strip()
 
         if app:
-
-            return {
-                "intent": "open_app",
-                "app": app,
-            }
+            return _attach_raw(
+                {
+                    "intent": "open_app",
+                    "app": app,
+                },
+                original,
+            )
 
     # -----------------------------
-    # AI fallback
+    # AI interpreter
     # -----------------------------
 
     ai_result = interpret_command(command)
 
-    if ai_result:
-        return ai_result
+    if isinstance(ai_result, dict):
+        return _attach_raw(ai_result, original)
 
+    # -----------------------------
+    # LLM fallback
     # -----------------------------
 
     llm_result = interpret_with_llm(command)
 
-    if llm_result:
-        return llm_result
+    if isinstance(llm_result, dict):
+        return _attach_raw(llm_result, original)
 
     # -----------------------------
+    # UNKNOWN (IMPORTANT for Step 76)
+    # -----------------------------
 
-    return None
+    return {
+        "intent": "unknown",
+        "raw": original,
+    }
