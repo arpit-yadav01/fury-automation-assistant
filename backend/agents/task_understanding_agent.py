@@ -12,8 +12,8 @@ class TaskUnderstandingAgent(BaseAgent):
         if not isinstance(task, dict):
             return False
 
-        # only if raw text exists
-        if task.get("raw"):
+        # only handle unknown intent
+        if task.get("intent") == "unknown":
             return True
 
         return False
@@ -33,8 +33,9 @@ class TaskUnderstandingAgent(BaseAgent):
         if not data.get("goal"):
             return task
 
+        # IMPORTANT: keep raw
         return {
             "intent": "goal_task",
             "data": data,
-            "source": "task_understanding",
+            "raw": text,
         }
