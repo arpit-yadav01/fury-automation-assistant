@@ -38,9 +38,13 @@ from agents.self_improve_agent import SelfImproveAgent
 from agents.session_agent import SessionAgent
 from agents.final_core_agent import FinalCoreAgent
 
-# ✅ STEP 76 / 77
+# PHASE 6
 from agents.task_understanding_agent import TaskUnderstandingAgent
 from agents.advanced_planner_agent import AdvancedPlannerAgent
+from agents.subtask_agent import SubtaskAgent
+from agents.knowledge_agent import KnowledgeAgent
+from agents.code_reasoner_agent import CodeReasonerAgent
+from agents.error_fix_agent import ErrorFixAgent
 
 
 def register_all_agents():
@@ -49,9 +53,17 @@ def register_all_agents():
 
     registry.register(PlannerAgent())
 
-    # ✅ PHASE 6
+    # ---------- PHASE 6 PIPELINE (CRITICAL ORDER) ----------
+
     registry.register(TaskUnderstandingAgent())
     registry.register(AdvancedPlannerAgent())
+    registry.register(SubtaskAgent())
+
+    # MUST be immediately after Subtask
+    registry.register(WorkflowAgent())
+    registry.register(ExecutorAgent())
+
+    # ---------- CONTEXT / SYSTEM ----------
 
     registry.register(ContextTrackingAgent())
     registry.register(AppDetectionAgent())
@@ -64,7 +76,12 @@ def register_all_agents():
     registry.register(SkillExecAgent())
     registry.register(GraphPlannerAgent())
     registry.register(ObserverAgent())
+
+    # ---------- ERROR SYSTEM ----------
+
     registry.register(ErrorAnalyzerAgent())
+    registry.register(ErrorFixAgent())
+
     registry.register(PluginAgent())
     registry.register(VisionReasonerAgent())
 
@@ -73,13 +90,13 @@ def register_all_agents():
     registry.register(DevAgent())
     registry.register(AutoAgent())
     registry.register(CodeAgent())
+    registry.register(CodeReasonerAgent())
     registry.register(TextAgent())
     registry.register(VoiceAgent())
     registry.register(VisionAgent())
 
-    # ---------- UI / SYSTEM ----------
+    # ---------- UI ----------
 
-    registry.register(WorkflowAgent())
     registry.register(UIAgent())
     registry.register(BrowserAgent())
     registry.register(TerminalAgent())
@@ -89,8 +106,8 @@ def register_all_agents():
     # ---------- LOW PRIORITY ----------
 
     registry.register(SkillAgent())
-    registry.register(ExecutorAgent())
     registry.register(MemoryAgent())
+    registry.register(KnowledgeAgent())
 
     # ---------- PHASE 5 ----------
 

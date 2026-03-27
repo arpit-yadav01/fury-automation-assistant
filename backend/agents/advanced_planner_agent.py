@@ -29,5 +29,5 @@ class AdvancedPlannerAgent(BaseAgent):
         return {
             "intent": "workflow",
             "workflow": steps,
-            "source": "advanced_planner",
+            "raw": task.get("raw"),
         }

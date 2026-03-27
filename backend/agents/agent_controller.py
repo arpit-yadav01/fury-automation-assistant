@@ -15,66 +15,93 @@ class AgentController:
         if not plan:
             return
 
-        # raw text → planner agent
+        current = plan
 
-        if isinstance(plan, str):
+        # allow multi-agent pipeline (Phase-6)
 
-            agent = registry.find_agent(plan)
+        for _ in range(10):
 
-            if agent:
+            # -------------------------
+            # workflow
+            # -------------------------
 
-                new_plan = agent.handle(plan)
+            if isinstance(current, dict) and "workflow" in current:
 
-                if new_plan:
-                    self.execute(new_plan)
+                self._execute_workflow(current["workflow"])
+                return
 
-            return
+            # -------------------------
+            # single task dict
+            # -------------------------
 
-        # workflow dict
+            if isinstance(current, dict):
 
-        if isinstance(plan, dict) and "workflow" in plan:
+                agent = registry.find_agent(current)
 
-            self._execute_workflow(plan["workflow"])
-            return
+                if not agent:
+                    print("No agent for task:", current)
+                    return
 
-        # list of tasks
+                try:
 
-        if isinstance(plan, dict):
-            plan = [plan]
+                    print("Agent:", agent.name)
 
-        for task in plan:
+                    result = agent.handle(current)
 
-            self._execute_task(task)
+                    # if agent returns new task → continue chain
 
-    # -------------------------
+                    if isinstance(result, dict):
+                        current = result
+                        continue
 
-    def _execute_task(self, task):
+                    # if nothing returned → stop
+                    return
 
-        agent = registry.find_agent(task)
+                except Exception as e:
 
-        if not agent:
+                    print("Agent error:", e)
 
-            print("No agent for task:", task)
-            return
+                    from agents.error_agent import ErrorRecoveryAgent
 
-        try:
+                    err = ErrorRecoveryAgent()
 
-            print("Agent:", agent.name)
+                    ok = err.handle_error(current, e)
 
-            agent.handle(task)
+                    if not ok:
+                        print("Task failed:", current)
 
-        except Exception as e:
+                    return
 
-            print("Agent error:", e)
+            # -------------------------
+            # list
+            # -------------------------
 
-            from agents.error_agent import ErrorRecoveryAgent
+            if isinstance(current, list):
 
-            err = ErrorRecoveryAgent()
+                for task in current:
+                    self.execute(task)
 
-            ok = err.handle_error(task, e)
+                return
 
-            if not ok:
-                print("Task failed:", task)
+            # -------------------------
+            # string
+            # -------------------------
+
+            if isinstance(current, str):
+
+                agent = registry.find_agent(current)
+
+                if agent:
+
+                    result = agent.handle(current)
+
+                    if result:
+                        current = result
+                        continue
+
+                return
+
+        print("Controller loop limit reached")
 
     # -------------------------
 
