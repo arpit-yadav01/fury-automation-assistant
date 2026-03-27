@@ -38,9 +38,13 @@ from agents.self_improve_agent import SelfImproveAgent
 from agents.session_agent import SessionAgent
 from agents.final_core_agent import FinalCoreAgent
 
+# =========================
 # PHASE 6
+# =========================
+
 from agents.task_understanding_agent import TaskUnderstandingAgent
 from agents.goal_solver_agent import GoalSolverAgent
+from agents.strategy_agent import StrategyAgent
 from agents.advanced_planner_agent import AdvancedPlannerAgent
 from agents.subtask_agent import SubtaskAgent
 from agents.knowledge_agent import KnowledgeAgent
@@ -48,8 +52,26 @@ from agents.code_reasoner_agent import CodeReasonerAgent
 from agents.error_fix_agent import ErrorFixAgent
 from agents.ui_layout_agent import UILayoutAgent
 
+# STEP 84 + 85
+from agents.context_engine_agent import ContextEngineAgent
+from agents.decision_agent import DecisionAgent
+
+# STEP 87
+from agents.experience_agent import ExperienceAgent
+
+# STEP 88 / 89 / 90
+from agents.reflection_agent import ReflectionAgent
+from agents.retry_agent import RetryAgent
+from agents.thinking_agent import ThinkingAgent
+
 
 def register_all_agents():
+
+    # =========================
+    # THINKING LAYER (STEP 90)
+    # =========================
+
+    registry.register(ThinkingAgent())   # 🔥 MUST BE FIRST
 
     # ---------- CORE ----------
 
@@ -59,8 +81,12 @@ def register_all_agents():
 
     registry.register(TaskUnderstandingAgent())
     registry.register(GoalSolverAgent())
+    registry.register(StrategyAgent())
     registry.register(AdvancedPlannerAgent())
     registry.register(SubtaskAgent())
+
+    registry.register(ContextEngineAgent())
+    registry.register(DecisionAgent())
 
     # MUST stay together
     registry.register(WorkflowAgent())
@@ -84,6 +110,7 @@ def register_all_agents():
 
     registry.register(ErrorAnalyzerAgent())
     registry.register(ErrorFixAgent())
+    registry.register(RetryAgent())   # ✅ STEP 89
 
     registry.register(PluginAgent())
     registry.register(VisionReasonerAgent())
@@ -107,11 +134,13 @@ def register_all_agents():
     registry.register(WindowAgent())
     registry.register(FileAgent())
 
-    # ---------- LOW ----------
+    # ---------- LOW / LEARNING ----------
 
     registry.register(SkillAgent())
     registry.register(MemoryAgent())
     registry.register(KnowledgeAgent())
+    registry.register(ExperienceAgent())   # STEP 87
+    registry.register(ReflectionAgent())   # STEP 88
 
     # ---------- CORE FINAL ----------
 
