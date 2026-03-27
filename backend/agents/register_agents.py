@@ -40,11 +40,13 @@ from agents.final_core_agent import FinalCoreAgent
 
 # PHASE 6
 from agents.task_understanding_agent import TaskUnderstandingAgent
+from agents.goal_solver_agent import GoalSolverAgent
 from agents.advanced_planner_agent import AdvancedPlannerAgent
 from agents.subtask_agent import SubtaskAgent
 from agents.knowledge_agent import KnowledgeAgent
 from agents.code_reasoner_agent import CodeReasonerAgent
 from agents.error_fix_agent import ErrorFixAgent
+from agents.ui_layout_agent import UILayoutAgent
 
 
 def register_all_agents():
@@ -53,17 +55,18 @@ def register_all_agents():
 
     registry.register(PlannerAgent())
 
-    # ---------- PHASE 6 PIPELINE (CRITICAL ORDER) ----------
+    # ---------- PHASE 6 PIPELINE ----------
 
     registry.register(TaskUnderstandingAgent())
+    registry.register(GoalSolverAgent())
     registry.register(AdvancedPlannerAgent())
     registry.register(SubtaskAgent())
 
-    # MUST be immediately after Subtask
+    # MUST stay together
     registry.register(WorkflowAgent())
     registry.register(ExecutorAgent())
 
-    # ---------- CONTEXT / SYSTEM ----------
+    # ---------- SYSTEM ----------
 
     registry.register(ContextTrackingAgent())
     registry.register(AppDetectionAgent())
@@ -77,7 +80,7 @@ def register_all_agents():
     registry.register(GraphPlannerAgent())
     registry.register(ObserverAgent())
 
-    # ---------- ERROR SYSTEM ----------
+    # ---------- ERROR ----------
 
     registry.register(ErrorAnalyzerAgent())
     registry.register(ErrorFixAgent())
@@ -85,7 +88,7 @@ def register_all_agents():
     registry.register(PluginAgent())
     registry.register(VisionReasonerAgent())
 
-    # ---------- HIGH PRIORITY ----------
+    # ---------- HIGH ----------
 
     registry.register(DevAgent())
     registry.register(AutoAgent())
@@ -94,6 +97,7 @@ def register_all_agents():
     registry.register(TextAgent())
     registry.register(VoiceAgent())
     registry.register(VisionAgent())
+    registry.register(UILayoutAgent())
 
     # ---------- UI ----------
 
@@ -103,13 +107,13 @@ def register_all_agents():
     registry.register(WindowAgent())
     registry.register(FileAgent())
 
-    # ---------- LOW PRIORITY ----------
+    # ---------- LOW ----------
 
     registry.register(SkillAgent())
     registry.register(MemoryAgent())
     registry.register(KnowledgeAgent())
 
-    # ---------- PHASE 5 ----------
+    # ---------- CORE FINAL ----------
 
     registry.register(SelfImproveAgent())
     registry.register(SessionAgent())
