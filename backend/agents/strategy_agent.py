@@ -1,5 +1,4 @@
 from agents.base_agent import BaseAgent
-from brain.strategy_engine import build_strategy
 
 
 class StrategyAgent(BaseAgent):
@@ -16,17 +15,66 @@ class StrategyAgent(BaseAgent):
 
     def handle(self, task):
 
-        data = task.get("data")
+        data = task.get("data", {})
 
-        strategy = build_strategy(data)
+        goal = data.get("goal")
+        typ = data.get("type")
 
-        if not strategy:
-            return task
+        steps = []
 
-        print("Strategy built:", len(strategy), "steps")
+        # -----------------------
+        # BUILD PROJECT
+        # -----------------------
+
+        if goal == "build":
+
+            if typ == "python":
+
+                steps = [
+                    {"intent": "open_app", "app": "code"},
+                    {"intent": "create_file", "filename": "main.py"},
+                    {"intent": "type_text", "text": "print('Hello World')"},
+                ]
+
+            elif typ == "react":
+
+                steps = [
+                    {
+                        "intent": "run_terminal",
+                        "command": "npx create-react-app myapp"
+                    }
+                ]
+
+        # -----------------------
+        # INSTALL PACKAGE
+        # -----------------------
+
+        if goal == "install":
+
+            name = data.get("name", "")
+
+            if name:
+                steps = [
+                    {
+                        "intent": "run_terminal",
+                        "command": f"pip install {name}"
+                    }
+                ]
+
+        # -----------------------
+        # ANALYZE UI
+        # -----------------------
+
+        if goal == "analyze_ui":
+
+            steps = [
+                {"intent": "analyze_ui"}
+            ]
+
+        # -----------------------
+
+        print("Strategy built:", len(steps), "steps")
 
         return {
-            "intent": "workflow",
-            "workflow": strategy,
-            "source": "strategy_engine"
+            "workflow": steps
         }

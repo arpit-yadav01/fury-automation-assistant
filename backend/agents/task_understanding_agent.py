@@ -12,11 +12,11 @@ class TaskUnderstandingAgent(BaseAgent):
         if not isinstance(task, dict):
             return False
 
-        # only handle unknown intent
-        if task.get("intent") == "unknown":
-            return True
+        # ✅ prevent infinite loop
+        if task.get("processed"):
+            return False
 
-        return False
+        return task.get("intent") == "unknown"
 
     def handle(self, task):
 
@@ -27,15 +27,17 @@ class TaskUnderstandingAgent(BaseAgent):
 
         data = understand_task(text)
 
-        if not data:
-            return task
+        # ❌ if nothing understood → STOP loop safely
+        if not data or not data.get("goal"):
+            return {
+                "intent": "text",
+                "raw": text
+            }
 
-        if not data.get("goal"):
-            return task
-
-        # IMPORTANT: keep raw
+        # ✅ convert to goal task
         return {
             "intent": "goal_task",
             "data": data,
             "raw": text,
+            "processed": True
         }

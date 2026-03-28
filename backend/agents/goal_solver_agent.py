@@ -1,31 +1,35 @@
 from agents.base_agent import BaseAgent
-from vision.layout_detector import detect_layout
-from vision.ui_graph import build_ui_graph
 
 
-class UILayoutAgent(BaseAgent):
+class GoalSolverAgent(BaseAgent):
 
     def __init__(self):
-        super().__init__("UILayoutAgent")
+        super().__init__("GoalSolverAgent")
 
     def can_handle(self, task):
 
         if not isinstance(task, dict):
             return False
 
-        return task.get("intent") == "analyze_ui"
+        # ✅ prevent re-loop
+        if task.get("forwarded"):
+            return False
+
+        return task.get("intent") == "goal_task"
 
     def handle(self, task):
 
-        print("UILayoutAgent → analyzing UI")
+        data = task.get("data", {})
 
-        elements = detect_layout()
+        goal = data.get("goal")
+        typ = data.get("type")
 
-        graph = build_ui_graph(elements)
+        print("GoalSolverAgent → solving:", goal, typ)
 
-        print("UI Elements:", len(graph))
-
+        # ✅ PASS FORWARD (do not stop pipeline)
         return {
-            "intent": "ui_graph",
-            "data": graph
+            "intent": "goal_task",
+            "data": data,
+            "raw": task.get("raw"),
+            "forwarded": True   # prevents re-handling
         }
