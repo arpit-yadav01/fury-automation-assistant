@@ -1,7 +1,7 @@
-def understand_task(text):
+# brain/task_understanding.py
 
-    if not text:
-        return None
+
+def understand_task(text):
 
     text = text.lower().strip()
 
@@ -13,7 +13,7 @@ def understand_task(text):
     }
 
     # -----------------------
-    # BUILD / CREATE
+    # BUILD PROJECT
     # -----------------------
 
     if "build" in text or "create" in text:
@@ -23,26 +23,41 @@ def understand_task(text):
         if "python" in text:
             result["type"] = "python"
 
-        elif "react" in text:
+        if "react" in text:
             result["type"] = "react"
 
-        elif "node" in text:
+        if "node" in text:
             result["type"] = "node"
 
     # -----------------------
     # INSTALL
     # -----------------------
 
-    elif "install" in text:
+    if "install" in text:
 
         result["goal"] = "install"
+
+        # ✅ extract package name
+        words = text.split()
+
+        if len(words) > 1:
+            result["name"] = words[-1]
 
     # -----------------------
     # SOLVE
     # -----------------------
 
-    elif "solve" in text:
+    if "solve" in text:
 
         result["goal"] = "solve"
+
+    # -----------------------
+    # UI ANALYSIS
+    # -----------------------
+
+    if "analyze ui" in text:
+        result["goal"] = "analyze_ui"
+
+    # -----------------------
 
     return result
