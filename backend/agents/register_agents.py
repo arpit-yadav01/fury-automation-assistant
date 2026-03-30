@@ -64,6 +64,10 @@ from agents.reflection_agent import ReflectionAgent
 from agents.retry_agent import RetryAgent
 from agents.thinking_agent import ThinkingAgent
 
+from agents.app_intelligence_agent import AppIntelligenceAgent
+from agents.ui_action_agent import UIActionAgent
+from agents.vision_target_agent import VisionTargetAgent
+from agents.ui_planner_agent import UIPlannerAgent
 
 def register_all_agents():
 
@@ -96,6 +100,8 @@ def register_all_agents():
 
     registry.register(ContextTrackingAgent())
     registry.register(AppDetectionAgent())
+    
+    registry.register(AppIntelligenceAgent())  # NEW
     registry.register(APIAgent())
     registry.register(RAGAgent())
     registry.register(RAGMemoryAgent())
@@ -124,11 +130,14 @@ def register_all_agents():
     registry.register(TextAgent())
     registry.register(VoiceAgent())
     registry.register(VisionAgent())
+    registry.register(VisionTargetAgent())
     registry.register(UILayoutAgent())
 
     # ---------- UI ----------
 
     registry.register(UIAgent())
+    registry.register(UIPlannerAgent()) 
+    registry.register(UIActionAgent())
     registry.register(BrowserAgent())
     registry.register(TerminalAgent())
     registry.register(WindowAgent())

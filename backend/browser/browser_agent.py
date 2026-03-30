@@ -79,3 +79,84 @@ def search_on_page(query, selector=None):
     except Exception as e:
 
         print("Search failed:", e)
+
+
+
+def smart_search(query):
+
+    try:
+
+        from browser.browser_agent import current_page, ensure_page
+        import time
+
+        ensure_page()
+
+        # wait for page load
+        current_page.wait_for_load_state("domcontentloaded")
+
+        time.sleep(2)  # ✅ human-like delay (VERY IMPORTANT)
+
+        url = current_page.url
+
+        selectors = []
+
+        # -----------------------
+        # GOOGLE
+        # -----------------------
+
+        if "google" in url:
+
+            selectors = [
+                'input[name="q"]',
+                'textarea[name="q"]',
+                'input[type="text"]'
+            ]
+
+        # -----------------------
+        # YOUTUBE
+        # -----------------------
+
+        elif "youtube" in url:
+
+            selectors = [
+                'input[name="search_query"]',
+                'input#search'
+            ]
+
+        else:
+            print("Unknown site for smart search")
+            return
+
+        input_box = None
+
+        # ✅ try multiple selectors
+        for sel in selectors:
+
+            try:
+                current_page.wait_for_selector(sel, timeout=3000)
+                input_box = current_page.locator(sel)
+                print("Found input:", sel)
+                break
+            except:
+                continue
+
+        if not input_box:
+            print("No input field found")
+            return
+
+        # ✅ click before typing (important)
+        input_box.click()
+
+        # clear existing
+        input_box.fill("")
+
+        # type query
+        input_box.type(query, delay=50)
+
+        # press enter
+        current_page.keyboard.press("Enter")
+
+        print("Smart search:", query)
+
+    except Exception as e:
+        print("Smart search failed:", e)
