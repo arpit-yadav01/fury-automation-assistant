@@ -1,12 +1,11 @@
 # skills/skills_registry.py
 
-from browser.browser_agent import open_website, search_on_page
+from browser.browser_agent import open_website, smart_search
 from automation.file_manager import create_file, write_to_file
 from developer.terminal_engine import run_terminal_command
 from vision.ui_click import click_text
 from automation.typing_engine import type_text, smart_type
 from automation.software_control import open_application
-
 from brain.context_memory import memory
 
 from developer.dev_workflow import (
@@ -17,7 +16,6 @@ from developer.dev_workflow import (
     run_python_file,
     run_command,
 )
-
 
 # -------------------------
 # OPEN APP
@@ -34,7 +32,6 @@ def skill_open_app(task):
 
     memory.set_app(app)
 
-    # better window names
     if app == "vscode":
         memory.set_window("code")
 
@@ -67,28 +64,19 @@ def skill_open_website(task):
 
 
 # -------------------------
-# WEB SEARCH
+# WEB SEARCH (🔥 UPDATED)
 # -------------------------
 
 def skill_web_search(task):
 
     query = task.get("query")
-    site = task.get("site", "google")
 
     if not query:
         open_website("https://google.com")
         return
 
-    if site == "youtube":
-
-        open_website("https://youtube.com")
-        search_on_page(query)
-
-    else:
-
-        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
-
-        open_website(url)
+    # ✅ use smart search instead of manual URL
+    smart_search(query)
 
     memory.set_action("web_search")
 
