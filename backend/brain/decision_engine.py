@@ -1,25 +1,14 @@
-from agents.base_agent import BaseAgent
-from brain.decision_engine import decide_action
+# brain/decision_engine.py
 
 
-class DecisionAgent(BaseAgent):
+def decide_action(options):
 
-    def __init__(self):
-        super().__init__("DecisionAgent")
+    if not options:
+        return None
 
-    def can_handle(self, task):
+    # pick first valid option
+    for opt in options:
+        if isinstance(opt, dict):
+            return opt
 
-        if not isinstance(task, dict):
-            return False
-
-        return task.get("intent") == "decide"
-
-    def handle(self, task):
-
-        options = task.get("options")
-
-        decision = decide_action(options)
-
-        print("Decision:", decision)
-
-        return decision
+    return options[0]
