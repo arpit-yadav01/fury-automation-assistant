@@ -69,6 +69,10 @@ from agents.ui_action_agent import UIActionAgent
 from agents.vision_target_agent import VisionTargetAgent
 from agents.ui_planner_agent import UIPlannerAgent
 
+
+from agents.target_selection_agent import TargetSelectionAgent
+
+
 def register_all_agents():
 
     # =========================
@@ -132,7 +136,7 @@ def register_all_agents():
     registry.register(VisionAgent())
     registry.register(VisionTargetAgent())
     registry.register(UILayoutAgent())
-
+    registry.register(TargetSelectionAgent())
     # ---------- UI ----------
 
     registry.register(UIAgent())

@@ -1,56 +1,88 @@
-import pyautogui
+import time
+
+from vision.screen_capture import capture_screen
+from vision.ui_verifier import verify_action
+from automation.ui_click_engine import safe_click
+from execution.recovery_engine import recover_action
 
 
-def click_xy(x, y, delay=0.2):
-    try:
-        pyautogui.moveTo(int(x), int(y), duration=delay)
-        pyautogui.click()
-        return True
-    except Exception as e:
-        print("Click XY failed:", e)
+def perform_ui_action(action):
+
+    if not isinstance(action, dict):
         return False
 
+    attempt = 0
 
-def click_box(box):
+    while attempt <= 2:
 
-    if not box:
-        return False
+        before = capture_screen()
 
-    try:
-        x = box.get("x")
-        y = box.get("y")
-        w = box.get("w")
-        h = box.get("h")
+        act = action.get("action")
 
-        if None in [x, y, w, h]:
+        # -----------------------
+        # CLICK
+        # -----------------------
+
+        if act == "click":
+
+            safe_click(
+                x=action.get("x"),
+                y=action.get("y"),
+                box=action.get("box")
+            )
+
+        # -----------------------
+        # TYPE
+        # -----------------------
+
+        elif act == "type":
+
+            from automation.ui_engine import type_text
+            text = action.get("text")
+
+            if text:
+                type_text(text)
+
+        # -----------------------
+        # ENTER
+        # -----------------------
+
+        elif act == "enter":
+
+            from automation.ui_engine import press
+            press("enter")
+
+        else:
+            print("Unknown UI action:", action)
             return False
 
-        cx = int(x + w / 2)
-        cy = int(y + h / 2)
+        # -----------------------
+        # VERIFY
+        # -----------------------
 
-        return click_xy(cx, cy)
+        time.sleep(1)
 
-    except Exception as e:
-        print("Click box failed:", e)
-        return False
+        after = capture_screen()
 
+        result = verify_action(before, after)
 
-def safe_click(x=None, y=None, box=None):
+        print("Attempt", attempt, "→", result)
 
-    # Priority 1 → box
-    if box:
-        if click_box(box):
+        if result.get("success"):
             return True
 
-    # Priority 2 → coordinates
-    if x is not None and y is not None:
-        if click_xy(x, y):
-            return True
+        # -----------------------
+        # RECOVERY
+        # -----------------------
 
-    # Fallback
-    try:
-        pyautogui.click()
-        return True
-    except Exception as e:
-        print("Fallback click failed:", e)
-        return False
+        new_action = recover_action(action, attempt)
+
+        if not new_action:
+            break
+
+        action = new_action
+        attempt += 1
+
+    print("Action failed after retries")
+
+    return False
