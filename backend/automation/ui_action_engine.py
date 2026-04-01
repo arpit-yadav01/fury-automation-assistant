@@ -1,51 +1,56 @@
-from vision.ui_click import click_text
-from automation.typing_engine import type_text
-from automation.ui_engine import press
+import pyautogui
 
 
-def perform_ui_action(action):
+def click_xy(x, y, delay=0.2):
+    try:
+        pyautogui.moveTo(int(x), int(y), duration=delay)
+        pyautogui.click()
+        return True
+    except Exception as e:
+        print("Click XY failed:", e)
+        return False
 
-    if not isinstance(action, dict):
-        print("Invalid UI action")
-        return None
 
-    act = action.get("action")
+def click_box(box):
 
-    # -----------------------
-    # CLICK TEXT
-    # -----------------------
+    if not box:
+        return False
 
-    if act == "click_text":
+    try:
+        x = box.get("x")
+        y = box.get("y")
+        w = box.get("w")
+        h = box.get("h")
 
-        text = action.get("text")
+        if None in [x, y, w, h]:
+            return False
 
-        if text:
-            print("Clicking text:", text)
-            return click_text(text)
+        cx = int(x + w / 2)
+        cy = int(y + h / 2)
 
-    # -----------------------
-    # TYPE TEXT
-    # -----------------------
+        return click_xy(cx, cy)
 
-    if act == "type":
+    except Exception as e:
+        print("Click box failed:", e)
+        return False
 
-        text = action.get("text")
 
-        if text:
-            print("Typing:", text)
-            return type_text(text)
+def safe_click(x=None, y=None, box=None):
 
-    # -----------------------
-    # PRESS ENTER
-    # -----------------------
+    # Priority 1 → box
+    if box:
+        if click_box(box):
+            return True
 
-    if act == "enter":
+    # Priority 2 → coordinates
+    if x is not None and y is not None:
+        if click_xy(x, y):
+            return True
 
-        print("Pressing Enter")
-        return press("enter")
-
-    # -----------------------
-
-    print("Unknown UI action:", action)
-
-    return None
+    # Fallback
+    try:
+        pyautogui.click()
+        return True
+    except Exception as e:
+        print("Fallback click failed:", e)
+        return False
