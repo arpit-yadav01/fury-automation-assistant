@@ -71,7 +71,7 @@ from agents.ui_planner_agent import UIPlannerAgent
 
 
 from agents.target_selection_agent import TargetSelectionAgent
-
+from agents.operator_agent import OperatorAgent
 
 def register_all_agents():
 
@@ -142,6 +142,7 @@ def register_all_agents():
     registry.register(UIAgent())
     registry.register(UIPlannerAgent()) 
     registry.register(UIActionAgent())
+    registry.register(OperatorAgent())
     registry.register(BrowserAgent())
     registry.register(TerminalAgent())
     registry.register(WindowAgent())
