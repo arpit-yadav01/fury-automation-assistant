@@ -1,6 +1,5 @@
 from automation.ui_action_engine import perform_ui_action
 
-
 MAX_STEPS = 10
 
 
@@ -10,7 +9,7 @@ def run_operator_loop(actions):
 
     if not actions:
         print("No actions")
-        return False
+        return
 
     step = 0
 
@@ -26,10 +25,8 @@ def run_operator_loop(actions):
 
         if not success:
             print("Step failed, stopping loop")
-            return False
+            break
 
         step += 1
 
     print("OperatorLoop → finished")
-
-    return True

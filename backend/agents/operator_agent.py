@@ -20,6 +20,6 @@ class OperatorAgent(BaseAgent):
 
         print("OperatorAgent → executing sequence")
 
-        result = run_operator_loop(actions)
+        run_operator_loop(actions)
 
-        return result
+        return True
