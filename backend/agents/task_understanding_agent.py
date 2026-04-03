@@ -12,7 +12,6 @@ class TaskUnderstandingAgent(BaseAgent):
         if not isinstance(task, dict):
             return False
 
-        # prevent loop
         if task.get("processed"):
             return False
 
@@ -25,37 +24,29 @@ class TaskUnderstandingAgent(BaseAgent):
         if not text:
             return task
 
-        text_lower = text.lower()
-
-        # =========================
-        # 🔥 PHASE 7 — SMART UI ROUTING
-        # =========================
-
-        if "youtube" in text_lower and "search" in text_lower:
-
-            query = text_lower.split("search")[-1].strip()
-
-            return {
-                "intent": "ui_goal",
-                "goal": f"search {query}",
-                "platform": "youtube",
-                "raw": text,
-                "processed": True,
-            }
-
-        # =========================
-        # NORMAL UNDERSTANDING
-        # =========================
-
         data = understand_task(text)
 
-        # fallback safe exit
+        # ❌ fallback FIX (CRITICAL)
         if not data or not data.get("goal"):
-            return {
-                "intent": "text",
-                "raw": text
-            }
 
+            # 🔥 simple rule-based fallback
+            text = text.lower()
+
+            if "notepad" in text:
+                return {
+                    "intent": "open_app",
+                    "app": "notepad"
+                }
+
+            if "type" in text:
+                return {
+                    "intent": "type_text",
+                    "text": text.replace("type", "").strip()
+                }
+
+            return task
+
+        # ✅ normal flow
         return {
             "intent": "goal_task",
             "data": data,

@@ -13,46 +13,62 @@ class PlannerAgent(BaseAgent):
 
     def can_handle(self, task):
 
-        # ✅ ONLY handle raw user input
+        # ✅ handle raw user input
         if isinstance(task, str):
             return True
 
-        # ✅ explicit planning request only
+        # ✅ explicit planning request
         if isinstance(task, dict) and task.get("intent") == "plan":
             return True
 
-        # ❌ DO NOT touch structured pipeline
         return False
 
     # -------------------------
 
     def handle(self, task):
 
-        # -------------------------
-        # RAW STRING → PLAN
-        # -------------------------
+        # =========================
+        # CASE 1 — RAW USER INPUT
+        # =========================
 
         if isinstance(task, str):
 
             print("PlannerAgent → create_plan")
 
-            plan = create_plan(task)
+            # 🔥 MULTI-COMMAND SUPPORT
+            if " and " in task:
 
-            return plan
+                parts = task.split(" and ")
 
-        # -------------------------
-        # EXPLICIT PLAN REQUEST
-        # -------------------------
+                return [
+                    create_plan(part.strip())
+                    for part in parts
+                ]
+
+            return create_plan(task)
+
+        # =========================
+        # CASE 2 — DICT PLAN REQUEST
+        # =========================
 
         if isinstance(task, dict):
 
             command = task.get("command")
 
             if command:
+
                 print("PlannerAgent → plan from dict")
 
-                plan = create_plan(command)
+                # 🔥 MULTI-COMMAND SUPPORT
+                if " and " in command:
 
-                return plan
+                    parts = command.split(" and ")
+
+                    return [
+                        create_plan(part.strip())
+                        for part in parts
+                    ]
+
+                return create_plan(command)
 
         return None

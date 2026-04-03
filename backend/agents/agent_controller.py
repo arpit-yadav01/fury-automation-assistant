@@ -1,5 +1,3 @@
-# agents/agent_controller.py
-
 from agents.agent_registry import registry
 
 
@@ -15,21 +13,35 @@ class AgentController:
         if not plan:
             return
 
+        # =========================
+        # LIST HANDLING
+        # =========================
+
+        if isinstance(plan, list):
+
+            for step in plan:
+                self.execute(step)
+
+            return
+
         current = plan
 
-        for _ in range(15):  # slightly increased safety
+        # =========================
+        # MAIN LOOP
+        # =========================
+
+        for _ in range(10):
 
             # -------------------------
-            # WORKFLOW
+            # WORKFLOW DIRECT EXECUTION
             # -------------------------
 
             if isinstance(current, dict) and "workflow" in current:
-
                 self._execute_workflow(current["workflow"])
                 return
 
             # -------------------------
-            # SINGLE TASK
+            # DICT TASK
             # -------------------------
 
             if isinstance(current, dict):
@@ -46,16 +58,25 @@ class AgentController:
 
                     result = agent.handle(current)
 
-                    # 🔥 CONTINUE CHAIN
-                    if isinstance(result, dict):
+                    # =========================
+                    # 🔥 CRITICAL FIX — PLANNER HANDOFF
+                    # =========================
+
+                    from execution.task_planner import create_plan
+
+                    # parse_command → planner
+                    if isinstance(result, dict) and result.get("intent") == "parse_command":
+                        result = create_plan(result.get("text"))
+
+                    # string fallback → planner
+                    if isinstance(result, str):
+                        result = create_plan(result)
+
+                    # continue chain
+                    if isinstance(result, dict) or isinstance(result, list):
                         current = result
                         continue
 
-                    # ✅ allow True (operator success)
-                    if result is True:
-                        return
-
-                    # stop if nothing
                     return
 
                 except Exception as e:
@@ -65,7 +86,6 @@ class AgentController:
                     from agents.error_agent import ErrorRecoveryAgent
 
                     err = ErrorRecoveryAgent()
-
                     ok = err.handle_error(current, e)
 
                     if not ok:
@@ -74,35 +94,42 @@ class AgentController:
                     return
 
             # -------------------------
-            # LIST
-            # -------------------------
-
-            if isinstance(current, list):
-
-                for task in current:
-                    self.execute(task)
-
-                return
-
-            # -------------------------
-            # RAW STRING (ENTRY POINT)
+            # STRING INPUT
             # -------------------------
 
             if isinstance(current, str):
 
                 agent = registry.find_agent(current)
 
-                if agent:
+                if not agent:
+                    print("No agent for input:", current)
+                    return
+
+                try:
 
                     print("Agent:", agent.name)
 
                     result = agent.handle(current)
 
-                    if isinstance(result, dict):
+                    # 🔥 SAME FIX FOR STRING FLOW
+                    from execution.task_planner import create_plan
+
+                    if isinstance(result, dict) and result.get("intent") == "parse_command":
+                        result = create_plan(result.get("text"))
+
+                    if isinstance(result, str):
+                        result = create_plan(result)
+
+                    if isinstance(result, dict) or isinstance(result, list):
                         current = result
                         continue
 
-                return
+                    return
+
+                except Exception as e:
+
+                    print("Agent error:", e)
+                    return
 
         print("Controller loop limit reached")
 
@@ -115,7 +142,6 @@ class AgentController:
             agent = registry.find_agent(step)
 
             if not agent:
-
                 print("No agent for step:", step)
                 continue
 
@@ -125,24 +151,16 @@ class AgentController:
 
                 result = agent.handle(step)
 
-                # 🔥 allow chained workflow steps
-                if isinstance(result, dict):
+                if isinstance(result, dict) or isinstance(result, list):
                     self.execute(result)
 
             except Exception as e:
 
                 print("Agent error:", e)
 
-                from agents.error_agent import ErrorRecoveryAgent
 
-                err = ErrorRecoveryAgent()
-
-                ok = err.handle_error(step, e)
-
-                if not ok:
-                    print("Step failed:", step)
-
-
-# global controller
+# -------------------------
+# GLOBAL
+# -------------------------
 
 controller = AgentController()

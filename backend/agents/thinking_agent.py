@@ -7,12 +7,18 @@ class ThinkingAgent(BaseAgent):
     def __init__(self):
         super().__init__("ThinkingAgent")
 
+    # -------------------------
+
     def can_handle(self, task):
 
+        # ONLY handle raw string input
         if isinstance(task, str):
             return True
 
+        # DO NOT block dict tasks (CRITICAL FIX)
         return False
+
+    # -------------------------
 
     def handle(self, task):
 
@@ -22,4 +28,8 @@ class ThinkingAgent(BaseAgent):
             print("Thinking → structured task")
             return result
 
-        return task
+        # 🔥 IMPORTANT: fallback to planner
+        return {
+            "intent": "parse_command",
+            "text": task
+        }
