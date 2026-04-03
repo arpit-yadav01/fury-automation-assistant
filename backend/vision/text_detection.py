@@ -5,27 +5,37 @@ import cv2
 from vision.screen_capture import capture_screen
 
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-
-
 def find_text_on_screen(target_text):
 
-    img = capture_screen()
+    try:
+        img = capture_screen()
 
-    data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
+        if img is None:
+            print("TextDetection → no screen")
+            return None
 
-    for i, text in enumerate(data["text"]):
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        if target_text.lower() in text.lower():
+        data = pytesseract.image_to_data(gray, output_type=pytesseract.Output.DICT)
 
-            x = data["left"][i]
-            y = data["top"][i]
-            w = data["width"][i]
-            h = data["height"][i]
+        for i, text in enumerate(data["text"]):
 
-            center_x = x + w // 2
-            center_y = y + h // 2
+            if target_text.lower() in text.lower():
 
-            return (center_x, center_y)
+                x = data["left"][i]
+                y = data["top"][i]
+                w = data["width"][i]
+                h = data["height"][i]
 
-    return None
+                return {
+                    "x": x,
+                    "y": y,
+                    "w": w,
+                    "h": h
+                }
+
+        return None
+
+    except Exception as e:
+        print("Text detection error:", e)
+        return None

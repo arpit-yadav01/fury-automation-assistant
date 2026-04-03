@@ -20,6 +20,43 @@ def parse_command(command):
     command = command.lower().strip()
 
     # -----------------------------
+    # STEP 97 — SCREEN MEMORY
+    # -----------------------------
+
+    if "capture screen" in command or "analyze screen" in command:
+        return {
+            "intent": "capture_screen",
+            "raw": original,
+        }
+
+    # -----------------------------
+    # STEP 82 — UI ANALYSIS
+    # -----------------------------
+
+    if "analyze ui" in command:
+        return {
+            "intent": "analyze_ui",
+            "raw": original,
+        }
+    
+
+    if "search youtube" in command:
+
+        return {
+            "intent": "auto_navigate",
+            "keyword": "search",
+            "raw": original,
+    }
+
+    if "search google" in command:
+
+        return {
+            "intent": "auto_navigate",
+            "keyword": "search",
+            "raw": original,
+    }
+
+    # -----------------------------
     # OPEN WEBSITE
     # -----------------------------
 
@@ -210,9 +247,16 @@ def parse_command(command):
 
     if isinstance(llm_result, dict):
         return _attach_raw(llm_result, original)
+    
+
+    if "navigate" in command or "auto click" in command:
+        return {
+            "intent": "auto_navigate",
+            "raw": original,
+    }
 
     # -----------------------------
-    # UNKNOWN (IMPORTANT for Step 76)
+    # UNKNOWN (IMPORTANT)
     # -----------------------------
 
     return {

@@ -64,14 +64,16 @@ from agents.reflection_agent import ReflectionAgent
 from agents.retry_agent import RetryAgent
 from agents.thinking_agent import ThinkingAgent
 
+# PHASE 7
 from agents.app_intelligence_agent import AppIntelligenceAgent
 from agents.ui_action_agent import UIActionAgent
 from agents.vision_target_agent import VisionTargetAgent
 from agents.ui_planner_agent import UIPlannerAgent
-
-
 from agents.target_selection_agent import TargetSelectionAgent
 from agents.operator_agent import OperatorAgent
+from agents.multi_app_agent import MultiAppAgent
+from agents.screen_memory_agent import ScreenMemoryAgent
+from agents.navigation_agent import NavigationAgent
 
 def register_all_agents():
 
@@ -79,7 +81,7 @@ def register_all_agents():
     # THINKING LAYER (STEP 90)
     # =========================
 
-    registry.register(ThinkingAgent())   # 🔥 MUST BE FIRST
+    registry.register(ThinkingAgent())   # MUST BE FIRST
 
     # ---------- CORE ----------
 
@@ -96,16 +98,27 @@ def register_all_agents():
     registry.register(ContextEngineAgent())
     registry.register(DecisionAgent())
 
-    # MUST stay together
+    # =========================
+    # 🔥 PHASE 7 CRITICAL (BEFORE EXECUTION)
+    # =========================
+
+    registry.register(MultiAppAgent())        # ✅ Step 96
+    registry.register(ScreenMemoryAgent())   # ✅ Step 97
+    registry.register(NavigationAgent())   
+
+    # =========================
+    # EXECUTION LAYER
+    # =========================
+
     registry.register(WorkflowAgent())
-    registry.register(ExecutorAgent())
+    registry.register(ExecutorAgent())   # ⚠️ MUST COME AFTER ABOVE
 
     # ---------- SYSTEM ----------
 
     registry.register(ContextTrackingAgent())
     registry.register(AppDetectionAgent())
-    
-    registry.register(AppIntelligenceAgent())  # NEW
+    registry.register(AppIntelligenceAgent())
+
     registry.register(APIAgent())
     registry.register(RAGAgent())
     registry.register(RAGMemoryAgent())
@@ -120,7 +133,7 @@ def register_all_agents():
 
     registry.register(ErrorAnalyzerAgent())
     registry.register(ErrorFixAgent())
-    registry.register(RetryAgent())   # ✅ STEP 89
+    registry.register(RetryAgent())
 
     registry.register(PluginAgent())
     registry.register(VisionReasonerAgent())
@@ -134,15 +147,18 @@ def register_all_agents():
     registry.register(TextAgent())
     registry.register(VoiceAgent())
     registry.register(VisionAgent())
+
     registry.register(VisionTargetAgent())
     registry.register(UILayoutAgent())
     registry.register(TargetSelectionAgent())
+
     # ---------- UI ----------
 
     registry.register(UIAgent())
-    registry.register(UIPlannerAgent()) 
+    registry.register(UIPlannerAgent())
     registry.register(UIActionAgent())
     registry.register(OperatorAgent())
+
     registry.register(BrowserAgent())
     registry.register(TerminalAgent())
     registry.register(WindowAgent())
@@ -153,8 +169,8 @@ def register_all_agents():
     registry.register(SkillAgent())
     registry.register(MemoryAgent())
     registry.register(KnowledgeAgent())
-    registry.register(ExperienceAgent())   # STEP 87
-    registry.register(ReflectionAgent())   # STEP 88
+    registry.register(ExperienceAgent())
+    registry.register(ReflectionAgent())
 
     # ---------- CORE FINAL ----------
 

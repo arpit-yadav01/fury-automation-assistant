@@ -1,9 +1,15 @@
+# automation/ui_action_engine.py
+
 import time
 
 from vision.screen_capture import capture_screen
 from vision.ui_verifier import verify_action
 from automation.ui_click_engine import safe_click
 from execution.recovery_engine import recover_action
+
+# ✅ NEW (STEP 96)
+from system.app_detector import get_active_window
+from system.window_switcher import focus_window
 
 
 def perform_ui_action(action):
@@ -14,6 +20,22 @@ def perform_ui_action(action):
     attempt = 0
 
     while attempt <= 2:
+
+        # -----------------------
+        # STEP 96: ENSURE APP
+        # -----------------------
+
+        target_app = action.get("app")
+
+        if target_app:
+            current = get_active_window()
+
+            if not current or target_app.lower() not in current:
+                focus_window(target_app)
+
+        # -----------------------
+        # BEFORE STATE
+        # -----------------------
 
         before = capture_screen()
 
@@ -38,6 +60,7 @@ def perform_ui_action(action):
         elif act == "type":
 
             from automation.ui_engine import type_text
+
             text = action.get("text")
 
             if text:
