@@ -17,12 +17,10 @@ class AgentController:
 
         current = plan
 
-        # allow multi-agent pipeline (Phase-6)
-
-        for _ in range(10):
+        for _ in range(15):  # slightly increased safety
 
             # -------------------------
-            # workflow
+            # WORKFLOW
             # -------------------------
 
             if isinstance(current, dict) and "workflow" in current:
@@ -31,7 +29,7 @@ class AgentController:
                 return
 
             # -------------------------
-            # single task dict
+            # SINGLE TASK
             # -------------------------
 
             if isinstance(current, dict):
@@ -48,13 +46,16 @@ class AgentController:
 
                     result = agent.handle(current)
 
-                    # if agent returns new task → continue chain
-
+                    # 🔥 CONTINUE CHAIN
                     if isinstance(result, dict):
                         current = result
                         continue
 
-                    # if nothing returned → stop
+                    # ✅ allow True (operator success)
+                    if result is True:
+                        return
+
+                    # stop if nothing
                     return
 
                 except Exception as e:
@@ -73,7 +74,7 @@ class AgentController:
                     return
 
             # -------------------------
-            # list
+            # LIST
             # -------------------------
 
             if isinstance(current, list):
@@ -84,7 +85,7 @@ class AgentController:
                 return
 
             # -------------------------
-            # string
+            # RAW STRING (ENTRY POINT)
             # -------------------------
 
             if isinstance(current, str):
@@ -93,9 +94,11 @@ class AgentController:
 
                 if agent:
 
+                    print("Agent:", agent.name)
+
                     result = agent.handle(current)
 
-                    if result:
+                    if isinstance(result, dict):
                         current = result
                         continue
 
@@ -120,7 +123,11 @@ class AgentController:
 
                 print("Agent:", agent.name)
 
-                agent.handle(step)
+                result = agent.handle(step)
+
+                # 🔥 allow chained workflow steps
+                if isinstance(result, dict):
+                    self.execute(result)
 
             except Exception as e:
 

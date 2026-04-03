@@ -1,38 +1,4 @@
 from agents.base_agent import BaseAgent
-from planner.ui_action_planner import plan_ui_actions
-
-
-class UIPlannerAgent(BaseAgent):
-
-    def __init__(self):
-        super().__init__("UIPlannerAgent")
-
-    def can_handle(self, task):
-
-        if not isinstance(task, dict):
-            return False
-
-        return task.get("intent") == "web_search"
-
-    def handle(self, task):
-
-        actions = plan_ui_actions(task)
-
-        if not actions:
-            return task
-
-        print("UIPlannerAgent → actions:", actions)
-
-        # ✅ CRITICAL FIX: convert to workflow
-        return {
-            "intent": "workflow",
-            "workflow": [
-                {"intent": "ui_action", "data": action}
-                for action in actions
-            ]
-        }
-    
-
 
 
 class UIPlannerAgent(BaseAgent):
@@ -50,19 +16,51 @@ class UIPlannerAgent(BaseAgent):
     def handle(self, task):
 
         goal = task.get("goal", "")
+        platform = task.get("platform")
 
-        print("UIPlannerAgent → planning:", goal)
+        print("UIPlannerAgent → planning:", goal, "on", platform)
 
-        # simple example
-        if "search" in goal:
+        # =========================
+        # ✅ YOUTUBE SEARCH (FINAL FIX)
+        # =========================
+
+        if platform == "youtube" and "search" in goal:
+
+            query = goal.replace("search", "").strip()
 
             return {
                 "intent": "ui_action_sequence",
                 "data": [
-                    {"action": "click"},
-                    {"action": "type", "text": goal.replace("search", "").strip()},
-                    {"action": "enter"}
+
+                    # STEP 1 → open YouTube
+                    {
+                        "action": "open_url",
+                        "url": "https://www.youtube.com"
+                    },
+
+                    # STEP 2 → wait for load
+                    {
+                        "action": "wait",
+                        "time": 3
+                    },
+
+                    # STEP 3 → focus search bar (shortcut)
+                    {
+                        "action": "press",
+                        "key": "/"
+                    },
+
+                    # STEP 4 → type query
+                    {
+                        "action": "type",
+                        "text": query
+                    },
+
+                    # STEP 5 → press enter
+                    {
+                        "action": "enter"
+                    }
                 ]
             }
 
-        return None    
+        return None

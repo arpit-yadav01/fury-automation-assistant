@@ -1,10 +1,9 @@
-# agents/executor_agent.py
-
 from agents.base_agent import BaseAgent
 
 from execution.executor import execute_plan
 from execution.workflow_engine import run_workflow
 from skills.skill_manager import execute_skill
+from skills.skills_registry import SKILLS
 
 
 class ExecutorAgent(BaseAgent):
@@ -16,13 +15,19 @@ class ExecutorAgent(BaseAgent):
 
     def can_handle(self, task):
 
-        if isinstance(task, dict) and "workflow" in task:
+        if not isinstance(task, dict):
+            return False
+
+        # workflow
+        if "workflow" in task:
             return True
 
-        if isinstance(task, dict) and task.get("intent"):
+        # step
+        if task.get("action"):
             return True
 
-        if isinstance(task, dict) and task.get("action"):
+        # ✅ ONLY HANDLE VALID SKILLS
+        if task.get("intent") in SKILLS:
             return True
 
         return False
@@ -31,8 +36,11 @@ class ExecutorAgent(BaseAgent):
 
     def handle(self, task):
 
-        # workflow dict
-        if isinstance(task, dict) and "workflow" in task:
+        # -------------------------
+        # WORKFLOW
+        # -------------------------
+
+        if "workflow" in task:
 
             print("ExecutorAgent → workflow")
 
@@ -40,8 +48,11 @@ class ExecutorAgent(BaseAgent):
 
             return
 
-        # workflow step
-        if isinstance(task, dict) and task.get("action"):
+        # -------------------------
+        # SINGLE STEP
+        # -------------------------
+
+        if task.get("action"):
 
             print("ExecutorAgent → step")
 
@@ -49,16 +60,27 @@ class ExecutorAgent(BaseAgent):
 
             return
 
-        # skill / intent
-        if isinstance(task, dict) and task.get("intent"):
+        # -------------------------
+        # SKILL EXECUTION
+        # -------------------------
 
-            print("ExecutorAgent → skill")
+        intent = task.get("intent")
 
-            execute_skill(task)
+        if intent in SKILLS:
+
+            print("ExecutorAgent → skill:", intent)
+
+            success = execute_skill(task)
+
+            if not success:
+                print("Skill failed:", intent)
 
             return
 
-        # fallback
-        print("ExecutorAgent fallback")
+        # -------------------------
+        # FALLBACK
+        # -------------------------
+
+        print("ExecutorAgent → fallback")
 
         execute_plan(task)

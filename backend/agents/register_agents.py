@@ -75,19 +75,18 @@ from agents.multi_app_agent import MultiAppAgent
 from agents.screen_memory_agent import ScreenMemoryAgent
 from agents.navigation_agent import NavigationAgent
 
+
 def register_all_agents():
 
     # =========================
-    # THINKING LAYER (STEP 90)
+    # 🧠 THINKING LAYER (FIRST)
     # =========================
 
-    registry.register(ThinkingAgent())   # MUST BE FIRST
+    registry.register(ThinkingAgent())
 
-    # ---------- CORE ----------
-
-    registry.register(PlannerAgent())
-
-    # ---------- PHASE 6 PIPELINE ----------
+    # =========================
+    # 🧠 UNDERSTANDING LAYER (BEFORE PLANNER)
+    # =========================
 
     registry.register(TaskUnderstandingAgent())
     registry.register(GoalSolverAgent())
@@ -99,21 +98,37 @@ def register_all_agents():
     registry.register(DecisionAgent())
 
     # =========================
-    # 🔥 PHASE 7 CRITICAL (BEFORE EXECUTION)
+    # 🔥 PHASE 7 (UI + CONTROL BEFORE PLANNER)
     # =========================
 
-    registry.register(MultiAppAgent())        # ✅ Step 96
-    registry.register(ScreenMemoryAgent())   # ✅ Step 97
-    registry.register(NavigationAgent())   
+    registry.register(MultiAppAgent())        # Step 96
+    registry.register(ScreenMemoryAgent())    # Step 97
+    registry.register(NavigationAgent())
+
+    registry.register(VisionTargetAgent())
+    registry.register(UILayoutAgent())
+    registry.register(TargetSelectionAgent())
+
+    registry.register(UIPlannerAgent())       # 🔥 MUST BEFORE PLANNER
+    registry.register(UIActionAgent())
+    registry.register(OperatorAgent())
 
     # =========================
-    # EXECUTION LAYER
+    # ⚠️ FALLBACK PLANNER (AFTER EVERYTHING)
+    # =========================
+
+    registry.register(PlannerAgent())
+
+    # =========================
+    # EXECUTION
     # =========================
 
     registry.register(WorkflowAgent())
-    registry.register(ExecutorAgent())   # ⚠️ MUST COME AFTER ABOVE
+    registry.register(ExecutorAgent())
 
-    # ---------- SYSTEM ----------
+    # =========================
+    # SYSTEM
+    # =========================
 
     registry.register(ContextTrackingAgent())
     registry.register(AppDetectionAgent())
@@ -129,7 +144,9 @@ def register_all_agents():
     registry.register(GraphPlannerAgent())
     registry.register(ObserverAgent())
 
-    # ---------- ERROR ----------
+    # =========================
+    # ERROR
+    # =========================
 
     registry.register(ErrorAnalyzerAgent())
     registry.register(ErrorFixAgent())
@@ -138,7 +155,9 @@ def register_all_agents():
     registry.register(PluginAgent())
     registry.register(VisionReasonerAgent())
 
-    # ---------- HIGH ----------
+    # =========================
+    # HIGH
+    # =========================
 
     registry.register(DevAgent())
     registry.register(AutoAgent())
@@ -148,23 +167,19 @@ def register_all_agents():
     registry.register(VoiceAgent())
     registry.register(VisionAgent())
 
-    registry.register(VisionTargetAgent())
-    registry.register(UILayoutAgent())
-    registry.register(TargetSelectionAgent())
-
-    # ---------- UI ----------
+    # =========================
+    # UI SYSTEM
+    # =========================
 
     registry.register(UIAgent())
-    registry.register(UIPlannerAgent())
-    registry.register(UIActionAgent())
-    registry.register(OperatorAgent())
-
     registry.register(BrowserAgent())
     registry.register(TerminalAgent())
     registry.register(WindowAgent())
     registry.register(FileAgent())
 
-    # ---------- LOW / LEARNING ----------
+    # =========================
+    # LEARNING
+    # =========================
 
     registry.register(SkillAgent())
     registry.register(MemoryAgent())
@@ -172,7 +187,9 @@ def register_all_agents():
     registry.register(ExperienceAgent())
     registry.register(ReflectionAgent())
 
-    # ---------- CORE FINAL ----------
+    # =========================
+    # FINAL
+    # =========================
 
     registry.register(SelfImproveAgent())
     registry.register(SessionAgent())

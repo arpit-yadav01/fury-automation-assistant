@@ -12,7 +12,7 @@ class TaskUnderstandingAgent(BaseAgent):
         if not isinstance(task, dict):
             return False
 
-        # ✅ prevent infinite loop
+        # prevent loop
         if task.get("processed"):
             return False
 
@@ -25,16 +25,37 @@ class TaskUnderstandingAgent(BaseAgent):
         if not text:
             return task
 
+        text_lower = text.lower()
+
+        # =========================
+        # 🔥 PHASE 7 — SMART UI ROUTING
+        # =========================
+
+        if "youtube" in text_lower and "search" in text_lower:
+
+            query = text_lower.split("search")[-1].strip()
+
+            return {
+                "intent": "ui_goal",
+                "goal": f"search {query}",
+                "platform": "youtube",
+                "raw": text,
+                "processed": True,
+            }
+
+        # =========================
+        # NORMAL UNDERSTANDING
+        # =========================
+
         data = understand_task(text)
 
-        # ❌ if nothing understood → STOP loop safely
+        # fallback safe exit
         if not data or not data.get("goal"):
             return {
                 "intent": "text",
                 "raw": text
             }
 
-        # ✅ convert to goal task
         return {
             "intent": "goal_task",
             "data": data,

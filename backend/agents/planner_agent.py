@@ -1,7 +1,6 @@
 # agents/planner_agent.py
 
 from agents.base_agent import BaseAgent
-
 from execution.task_planner import create_plan
 
 
@@ -14,19 +13,24 @@ class PlannerAgent(BaseAgent):
 
     def can_handle(self, task):
 
-        # Planner handles raw text command
-
+        # ✅ ONLY handle raw user input
         if isinstance(task, str):
             return True
 
+        # ✅ explicit planning request only
         if isinstance(task, dict) and task.get("intent") == "plan":
             return True
 
+        # ❌ DO NOT touch structured pipeline
         return False
 
     # -------------------------
 
     def handle(self, task):
+
+        # -------------------------
+        # RAW STRING → PLAN
+        # -------------------------
 
         if isinstance(task, str):
 
@@ -36,11 +40,16 @@ class PlannerAgent(BaseAgent):
 
             return plan
 
+        # -------------------------
+        # EXPLICIT PLAN REQUEST
+        # -------------------------
+
         if isinstance(task, dict):
 
             command = task.get("command")
 
             if command:
+                print("PlannerAgent → plan from dict")
 
                 plan = create_plan(command)
 
