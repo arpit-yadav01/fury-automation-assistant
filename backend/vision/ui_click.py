@@ -1,5 +1,10 @@
 # utils/vision/ui_click.py
 
+import pytesseract
+
+# 🔥 TESSERACT PATH (correct)
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
 import time
 import pyautogui
 
@@ -7,30 +12,51 @@ from vision.text_detection import find_text_on_screen
 
 
 # -------------------------
-# BASIC CLICK
+# BASIC CLICK (FIXED)
 # -------------------------
 
 def click_text(text):
 
     position = find_text_on_screen(text)
 
-    if position:
+    if not position:
+        print(f"Text '{text}' not found")
+        return False
 
-        x, y = position
+    # -------------------------
+    # HANDLE ALL FORMATS
+    # -------------------------
 
-        print(f"Clicking '{text}' at", position)
+    # case 1: dict {"x","y","w","h"}
+    if isinstance(position, dict):
 
-        pyautogui.moveTo(x, y, duration=0.4)
+        x = int(position["x"] + position["w"] / 2)
+        y = int(position["y"] + position["h"] / 2)
 
-        pyautogui.click()
+    # case 2: tuple/list (x, y)
+    elif isinstance(position, (list, tuple)):
 
-        return True
+        if len(position) == 2:
+            x, y = position
+
+        elif len(position) >= 4:
+            x = int(position[0] + position[2] / 2)
+            y = int(position[1] + position[3] / 2)
+
+        else:
+            print("Invalid position:", position)
+            return False
 
     else:
-
-        print(f"Text '{text}' not found")
-
+        print("Unknown position format:", position)
         return False
+
+    print(f"Clicking '{text}' at", (x, y))
+
+    pyautogui.moveTo(x, y, duration=0.4)
+    pyautogui.click()
+
+    return True
 
 
 # -------------------------
@@ -47,10 +73,22 @@ def click_text_safe(text, retries=3, delay=1):
 
         if position:
 
-            x, y = position
+            if isinstance(position, (list, tuple)):
+
+                if len(position) == 2:
+                    x, y = position
+
+                elif len(position) >= 4:
+                    x = int(position[0] + position[2] / 2)
+                    y = int(position[1] + position[3] / 2)
+
+                else:
+                    continue
+
+            else:
+                continue
 
             pyautogui.moveTo(x, y, duration=0.4)
-
             pyautogui.click()
 
             return True
@@ -58,7 +96,6 @@ def click_text_safe(text, retries=3, delay=1):
         time.sleep(delay)
 
     print("Failed to click:", text)
-
     return False
 
 
@@ -74,10 +111,22 @@ def double_click_text(text):
         print("Not found:", text)
         return False
 
-    x, y = position
+    if isinstance(position, (list, tuple)):
+
+        if len(position) == 2:
+            x, y = position
+
+        elif len(position) >= 4:
+            x = int(position[0] + position[2] / 2)
+            y = int(position[1] + position[3] / 2)
+
+        else:
+            return False
+
+    else:
+        return False
 
     pyautogui.moveTo(x, y, duration=0.4)
-
     pyautogui.doubleClick()
 
     return True
@@ -95,10 +144,22 @@ def right_click_text(text):
         print("Not found:", text)
         return False
 
-    x, y = position
+    if isinstance(position, (list, tuple)):
+
+        if len(position) == 2:
+            x, y = position
+
+        elif len(position) >= 4:
+            x = int(position[0] + position[2] / 2)
+            y = int(position[1] + position[3] / 2)
+
+        else:
+            return False
+
+    else:
+        return False
 
     pyautogui.moveTo(x, y, duration=0.4)
-
     pyautogui.rightClick()
 
     return True
