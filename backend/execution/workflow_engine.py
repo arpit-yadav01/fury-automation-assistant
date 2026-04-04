@@ -54,9 +54,8 @@ def run_workflow(steps):
 
                     break
 
-
                 # -----------------------
-                # OPEN URL
+                # OPEN URL (🔥 FINAL FIX)
                 # -----------------------
                 elif action == "open_url":
 
@@ -66,17 +65,28 @@ def run_workflow(steps):
 
                     wait(4)
 
+                    # 🔥 STRONG FOCUS
                     focus_window("chrome")
 
-                    memory.set_site(
-                        "youtube" if "youtube" in url else "google"
-                    )
+                    # 🔥 FORCE CORRECT TAB
+                    hotkey("ctrl", "l")
+                    wait(0.5)
+                    press("esc")
+                    wait(0.3)
+
+                    # 🔥 CONTEXT SET
+                    if "youtube" in url:
+                        memory.set_site("youtube")
+                    elif "google" in url:
+                        memory.set_site("google")
+                    else:
+                        memory.set_site(url)
+
                     memory.set_app("browser")
                     memory.set_window("chrome")
                     memory.set_action("open_website")
 
                     break
-
 
                 # -----------------------
                 # WAIT
@@ -86,56 +96,30 @@ def run_workflow(steps):
                     wait(step.get("time", 1))
                     break
 
-
                 # -----------------------
-                # TYPE
+                # TYPE (🔥 CLEAN)
                 # -----------------------
                 elif action == "type":
 
                     app = memory.get_app()
 
                     if app == "browser":
-
                         focus_window("chrome")
-                        wait(1)
-
-                        clicked = False
-
-                        try:
-
-                            from vision.ui_click import click_text_safe
-
-                            for label in [
-                                "Search",
-                                "search",
-                                "Search YouTube",
-                                "Search Google",
-                            ]:
-
-                                if click_text_safe(label, retries=2):
-                                    clicked = True
-                                    break
-
-                        except Exception:
-                            pass
-
-                        if not clicked:
-                            click()
+                        wait(0.5)
 
                     else:
-
                         win = memory.get_window()
-
                         if win:
                             focus_window(win)
-                            wait(1)
+                            wait(0.5)
+
+                    print("Typing:", step["text"])
 
                     type_text(step["text"])
 
                     memory.set_action("type_text")
 
                     break
-
 
                 # -----------------------
                 # PRESS
@@ -145,7 +129,6 @@ def run_workflow(steps):
                     press(step["key"])
                     break
 
-
                 # -----------------------
                 # HOTKEY
                 # -----------------------
@@ -154,7 +137,6 @@ def run_workflow(steps):
                     hotkey(*step["keys"])
                     break
 
-
                 # -----------------------
                 # CLICK
                 # -----------------------
@@ -162,7 +144,6 @@ def run_workflow(steps):
 
                     click()
                     break
-
 
                 # -----------------------
                 # CREATE FILE
@@ -178,7 +159,6 @@ def run_workflow(steps):
 
                     break
 
-
                 # -----------------------
                 # TERMINAL
                 # -----------------------
@@ -190,13 +170,17 @@ def run_workflow(steps):
 
                     break
 
-
                 # -----------------------
-                # SKILL FALLBACK
+                # SKILL (SAFE)
                 # -----------------------
                 elif action == "skill":
 
                     task = step.get("data")
+
+                    # 🔥 PREVENT DUPLICATE WEBSITE OPEN
+                    if task.get("intent") == "open_website":
+                        print("Skipping duplicate open_website skill")
+                        break
 
                     if task:
 
@@ -207,11 +191,9 @@ def run_workflow(steps):
 
                     raise Exception("Skill failed")
 
-
                 else:
 
                     raise Exception("Unknown action")
-
 
             except Exception as e:
 
