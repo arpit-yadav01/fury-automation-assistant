@@ -1,15 +1,18 @@
 # automation/ui_action_engine.py
 
 import time
+import pyautogui
 
 from vision.screen_capture import capture_screen
 from vision.ui_verifier import verify_action
 from automation.ui_click_engine import safe_click
 from execution.recovery_engine import recover_action
 
-# ✅ NEW (STEP 96)
 from system.app_detector import get_active_window
 from system.window_switcher import focus_window
+
+# 🔥 HARD SWITCH (disable all OCR typing)
+DISABLE_OCR_TYPING = True
 
 
 def perform_ui_action(action):
@@ -22,7 +25,7 @@ def perform_ui_action(action):
     while attempt <= 2:
 
         # -----------------------
-        # STEP 96: ENSURE APP
+        # ENSURE CORRECT APP
         # -----------------------
 
         target_app = action.get("app")
@@ -30,7 +33,7 @@ def perform_ui_action(action):
         if target_app:
             current = get_active_window()
 
-            if not current or target_app.lower() not in current:
+            if not current or target_app.lower() not in current.lower():
                 focus_window(target_app)
 
         # -----------------------
@@ -41,11 +44,68 @@ def perform_ui_action(action):
 
         act = action.get("action")
 
-        # -----------------------
-        # CLICK
-        # -----------------------
+        print("UIAction:", action)
 
-        if act == "click":
+        # =======================
+        # OPEN URL
+        # =======================
+
+        if act == "open_url":
+
+            from browser.browser_agent import open_website
+
+            url = action.get("url")
+
+            if url:
+                open_website(url)
+                return True
+
+        # =======================
+        # WAIT
+        # =======================
+
+        elif act == "wait":
+
+            time.sleep(action.get("time", 2))
+            return True
+
+        # =======================
+        # PRESS KEY
+        # =======================
+
+        elif act == "press":
+
+            key = action.get("key")
+
+            if key:
+                print("Press:", key)
+                pyautogui.press(key)
+                return True
+
+        # =======================
+        # CLICK TEXT (BLOCKED)
+        # =======================
+
+        elif act == "click_text":
+
+            if DISABLE_OCR_TYPING:
+                print("🚫 OCR click disabled")
+                return False
+
+            from vision.ui_click import click_text
+
+            text = action.get("text")
+
+            if text:
+                success = click_text(text)
+                if success:
+                    return True
+
+        # =======================
+        # CLICK (XY / BOX)
+        # =======================
+
+        elif act == "click":
 
             safe_click(
                 x=action.get("x"),
@@ -53,27 +113,31 @@ def perform_ui_action(action):
                 box=action.get("box")
             )
 
-        # -----------------------
-        # TYPE
-        # -----------------------
+        # =======================
+        # 🔥 TYPE (FINAL FIX)
+        # =======================
 
         elif act == "type":
-
-            from automation.ui_engine import type_text
 
             text = action.get("text")
 
             if text:
-                type_text(text)
+                print("🔥 FORCE TYPE:", text)
 
-        # -----------------------
+                # 🔥 DIRECT HARD TYPE (bypass everything)
+                pyautogui.write(text, interval=0.03)
+
+            return True  # 🔥 STOP HERE (NO FALLBACK)
+
+        # =======================
         # ENTER
-        # -----------------------
+        # =======================
 
         elif act == "enter":
 
-            from automation.ui_engine import press
-            press("enter")
+            print("Press: enter")
+            pyautogui.press("enter")
+            return True
 
         else:
             print("Unknown UI action:", action)

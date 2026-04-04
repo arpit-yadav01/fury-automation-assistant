@@ -1,7 +1,9 @@
 import pyautogui
 import time
 
-pyautogui.FAILSAFE = True
+# 🔥 FIXED
+pyautogui.FAILSAFE = False
+pyautogui.PAUSE = 0.1
 
 
 # =========================
@@ -43,7 +45,7 @@ def hotkey(*keys):
     pyautogui.hotkey(*keys)
 
 
-def type_text(text, interval=0.02):
+def type_text(text, interval=0.03):
     pyautogui.write(text, interval=interval)
 
 
