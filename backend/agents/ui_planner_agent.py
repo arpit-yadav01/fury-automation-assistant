@@ -21,7 +21,7 @@ class UIPlannerAgent(BaseAgent):
         print("UIPlannerAgent → planning:", goal, "on", platform)
 
         # =========================
-        # ✅ YOUTUBE SEARCH (FINAL FIX)
+        # 🔥 YOUTUBE SEARCH (FINAL STABLE VERSION)
         # =========================
 
         if platform == "youtube" and "search" in goal:
@@ -32,34 +32,27 @@ class UIPlannerAgent(BaseAgent):
                 "intent": "ui_action_sequence",
                 "data": [
 
-                    # STEP 1 → open YouTube
-                    {
-                        "action": "open_url",
-                        "url": "https://www.youtube.com"
-                    },
+                    # 1. open YouTube
+                    {"action": "open_url", "url": "https://www.youtube.com"},
 
-                    # STEP 2 → wait for load
-                    {
-                        "action": "wait",
-                        "time": 3
-                    },
+                    # 2. wait for page
+                    {"action": "wait", "time": 3},
 
-                    # STEP 3 → focus search bar (shortcut)
-                    {
-                        "action": "press",
-                        "key": "/"
-                    },
+                    # 3. try shortcut focus
+                    {"action": "press", "key": "/"},
 
-                    # STEP 4 → type query
-                    {
-                        "action": "type",
-                        "text": query
-                    },
+                    {"action": "wait", "time": 1},
 
-                    # STEP 5 → press enter
-                    {
-                        "action": "enter"
-                    }
+                    # 🔥 fallback click (important)
+                    {"action": "click", "x": 900, "y": 120},
+
+                    {"action": "wait", "time": 1},
+
+                    # 4. type query
+                    {"action": "type", "text": query},
+
+                    # 5. enter
+                    {"action": "press", "key": "enter"}
                 ]
             }
 
