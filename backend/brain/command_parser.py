@@ -1,9 +1,11 @@
+# brain/command_parser.py
+
 from brain.ai_interpreter import interpret_command
 from brain.llm_brain import interpret_with_llm
 
 
 def _attach_raw(result, command):
-    """helper to attach raw text"""
+
     if not isinstance(result, dict):
         return None
 
@@ -20,80 +22,62 @@ def parse_command(command):
     command = command.lower().strip()
 
     # -----------------------------
-    # STEP 97 — SCREEN MEMORY
+    # SCREEN
     # -----------------------------
 
     if "capture screen" in command or "analyze screen" in command:
-        return {
-            "intent": "capture_screen",
-            "raw": original,
-        }
+        return {"intent": "capture_screen", "raw": original}
 
     # -----------------------------
-    # STEP 82 — UI ANALYSIS
+    # UI ANALYSIS
     # -----------------------------
 
     if "analyze ui" in command:
-        return {
-            "intent": "analyze_ui",
-            "raw": original,
-        }
-    
-
-    if "search youtube" in command:
-
-        return {
-            "intent": "auto_navigate",
-            "keyword": "search",
-            "raw": original,
-    }
-
-    if "search google" in command:
-
-        return {
-            "intent": "auto_navigate",
-            "keyword": "search",
-            "raw": original,
-    }
+        return {"intent": "analyze_ui", "raw": original}
 
     # -----------------------------
     # OPEN WEBSITE
     # -----------------------------
 
     if command == "open google":
-        return _attach_raw(
-            {
-                "intent": "open_website",
-                "url": "https://www.google.com",
-            },
-            original,
-        )
+        return _attach_raw({
+            "intent": "open_website",
+            "url": "https://www.google.com",
+        }, original)
 
     if command == "open youtube":
-        return _attach_raw(
-            {
-                "intent": "open_website",
-                "url": "https://www.youtube.com",
-            },
-            original,
-        )
+        return _attach_raw({
+            "intent": "open_website",
+            "url": "https://www.youtube.com",
+        }, original)
 
     # -----------------------------
-    # SEARCH
+    # 🔥 YOUTUBE SEARCH (SMART)
+    # -----------------------------
+
+    if "youtube" in command and "search" in command:
+
+        query = command.replace("search", "")
+        query = query.replace("youtube", "").strip()
+
+        return _attach_raw({
+            "intent": "web_search",
+            "site": "youtube",
+            "query": query,
+        }, original)
+
+    # -----------------------------
+    # 🔥 GENERIC SEARCH (FIXED)
     # -----------------------------
 
     if command.startswith("search "):
 
         query = command.replace("search", "").strip()
 
-        return _attach_raw(
-            {
-                "intent": "web_search",
-                "site": "google",
-                "query": query,
-            },
-            original,
-        )
+        return _attach_raw({
+            "intent": "web_search",
+            "query": query
+        }, original)
 
     # -----------------------------
     # DEV COMMANDS
@@ -103,13 +87,10 @@ def parse_command(command):
 
         cmd = command.replace("dev", "").strip()
 
-        return _attach_raw(
-            {
-                "intent": "dev",
-                "dev": cmd,
-            },
-            original,
-        )
+        return _attach_raw({
+            "intent": "dev",
+            "dev": cmd,
+        }, original)
 
     # -----------------------------
     # GENERATE CODE
@@ -132,30 +113,24 @@ def parse_command(command):
         task = task.replace(language, "")
         task = task.strip()
 
-        return _attach_raw(
-            {
-                "intent": "generate_code",
-                "language": language,
-                "task": task,
-            },
-            original,
-        )
+        return _attach_raw({
+            "intent": "generate_code",
+            "language": language,
+            "task": task,
+        }, original)
 
     # -----------------------------
-    # TYPE / WRITE
+    # TYPE
     # -----------------------------
 
     if command.startswith("type ") or command.startswith("write "):
 
         text = command.split(" ", 1)[1]
 
-        return _attach_raw(
-            {
-                "intent": "type_text",
-                "text": text,
-            },
-            original,
-        )
+        return _attach_raw({
+            "intent": "type_text",
+            "text": text,
+        }, original)
 
     # -----------------------------
     # CREATE FILE
@@ -169,23 +144,17 @@ def parse_command(command):
 
             filename = words[2]
 
-            return _attach_raw(
-                {
-                    "intent": "create_file",
-                    "filename": filename,
-                },
-                original,
-            )
+            return _attach_raw({
+                "intent": "create_file",
+                "filename": filename,
+            }, original)
 
     if "create python file" in command:
 
-        return _attach_raw(
-            {
-                "intent": "create_file",
-                "filename": "main.py",
-            },
-            original,
-        )
+        return _attach_raw({
+            "intent": "create_file",
+            "filename": "main.py",
+        }, original)
 
     # -----------------------------
     # TERMINAL
@@ -195,23 +164,17 @@ def parse_command(command):
 
         cmd = command.replace("run command", "").strip()
 
-        return _attach_raw(
-            {
-                "intent": "run_terminal",
-                "command": cmd,
-            },
-            original,
-        )
+        return _attach_raw({
+            "intent": "run_terminal",
+            "command": cmd,
+        }, original)
 
     if command.startswith("pip install"):
 
-        return _attach_raw(
-            {
-                "intent": "run_terminal",
-                "command": command,
-            },
-            original,
-        )
+        return _attach_raw({
+            "intent": "run_terminal",
+            "command": command,
+        }, original)
 
     # -----------------------------
     # OPEN APP
@@ -222,16 +185,13 @@ def parse_command(command):
         app = command.replace("open", "").strip()
 
         if app:
-            return _attach_raw(
-                {
-                    "intent": "open_app",
-                    "app": app,
-                },
-                original,
-            )
+            return _attach_raw({
+                "intent": "open_app",
+                "app": app,
+            }, original)
 
     # -----------------------------
-    # AI interpreter
+    # AI INTERPRETER
     # -----------------------------
 
     ai_result = interpret_command(command)
@@ -240,23 +200,16 @@ def parse_command(command):
         return _attach_raw(ai_result, original)
 
     # -----------------------------
-    # LLM fallback
+    # LLM FALLBACK
     # -----------------------------
 
     llm_result = interpret_with_llm(command)
 
     if isinstance(llm_result, dict):
         return _attach_raw(llm_result, original)
-    
-
-    if "navigate" in command or "auto click" in command:
-        return {
-            "intent": "auto_navigate",
-            "raw": original,
-    }
 
     # -----------------------------
-    # UNKNOWN (IMPORTANT)
+    # UNKNOWN
     # -----------------------------
 
     return {

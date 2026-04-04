@@ -22,18 +22,20 @@ def interpret_command(command):
     command = command.lower().strip()
 
     # -------------------------
-    # YOUTUBE SEARCH
+    # 🔥 YOUTUBE PRIORITY FIX
     # -------------------------
 
-    if "youtube" in command and "search" in command:
+    if "youtube" in command:
 
-        query = clean_query(command)
+        if "search" in command or "play" in command:
 
-        return {
-            "intent": "web_search",
-            "site": "youtube",
-            "query": query
-        }
+            query = clean_query(command)
+
+            return {
+                "intent": "web_search",
+                "site": "youtube",
+                "query": query
+            }
 
     # -------------------------
     # GOOGLE SEARCH
