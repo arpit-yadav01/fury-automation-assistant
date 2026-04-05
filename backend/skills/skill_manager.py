@@ -7,14 +7,18 @@ def execute_skill(task):
     intent = task.get("intent")
 
     if not intent:
+        print("No intent in task")
         return False
 
     skill = SKILLS.get(intent)
 
     if not skill:
+        print("No skill found for:", intent)
         return False
 
     try:
+
+        print("Executing skill:", intent)
 
         skill(task)
 
