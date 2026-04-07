@@ -10,16 +10,15 @@ def normalize(command):
 
 def build_auto_skills():
 
-    data = load_memory()
+    AUTO_SKILLS.clear()  # 🔥 prevent duplication
+
+    data = load_experiences()
 
     counter = {}
 
     for exp in data:
 
-        cmd = normalize(exp.get("command", ""))
-
-        if not cmd:
-            continue
+        cmd = normalize(exp["command"])
 
         if cmd not in counter:
             counter[cmd] = []
@@ -32,7 +31,10 @@ def build_auto_skills():
 
             skill_name = generate_skill_name(cmd)
 
-            AUTO_SKILLS[skill_name] = logs[-1].get("plan")
+            AUTO_SKILLS[skill_name] = {
+                "plan": logs[-1]["plan"],
+                "command": cmd
+            }
 
     return AUTO_SKILLS
 

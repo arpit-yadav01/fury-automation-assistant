@@ -461,7 +461,9 @@ def execute_skill(intent, task):
 
         print("⚡ Using learned skill:", intent)
 
-        return auto[intent]
+        return {
+            "workflow": auto[intent]
+}
 
     # -------------------------
     # NORMAL SKILLS

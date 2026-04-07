@@ -201,15 +201,15 @@
 
 
 
-
 from brain.command_parser import parse_command
 from brain.llm_brain import interpret_with_llm
 from brain.ai_interpreter import interpret_command
 
 from brain.context_memory import memory
 from memory.experience_memory import find_similar
+from skills.auto_skill_builder import find_best_skill
 
-print("🔥 FINAL TASK PLANNER (PHASE-8 READY)")
+print("🔥 FINAL TASK PLANNER (PHASE-8 STABLE)")
 
 
 # -------------------------
@@ -254,6 +254,7 @@ def build_workflow(tasks):
         t = apply_context(t)
         intent = t.get("intent")
 
+        # OPEN WEBSITE
         if intent == "open_website":
 
             url = t.get("url")
@@ -265,6 +266,7 @@ def build_workflow(tasks):
             elif "google" in url:
                 current_site = "google"
 
+        # WEB SEARCH
         elif intent == "web_search":
 
             query = t.get("query")
@@ -289,6 +291,7 @@ def build_workflow(tasks):
                 steps.append({"action": "type", "text": query})
                 steps.append({"action": "press", "key": "enter"})
 
+        # TYPE
         elif intent == "type_text":
 
             steps.append({
@@ -296,6 +299,7 @@ def build_workflow(tasks):
                 "text": t.get("text")
             })
 
+        # FALLBACK
         else:
 
             steps.append({
@@ -341,14 +345,23 @@ def handle_single_task(task):
 def create_plan(command):
 
     # =========================
+    # 🔥 STEP 105 — SMART SKILL MATCH
+    # =========================
+
+    skill_name, plan = find_best_skill(command)
+
+    if plan:
+        print(f"⚡ Smart skill used: {skill_name}")
+        return plan
+
+    # =========================
     # 🔥 STEP 103 — MEMORY CHECK
     # =========================
 
     exp = find_similar(command)
 
     if exp and exp.get("success"):
-        if not memory.get_action():
-            print("⚡ Using past experience")
+        print("⚡ Using past experience")
         return exp.get("plan")
 
     # -------------------------
@@ -364,13 +377,16 @@ def create_plan(command):
         if task:
             tasks.append(task)
 
+    # MULTI STEP
     if len(tasks) > 1:
         print("Planner: building workflow")
         return build_workflow(tasks)
 
+    # SINGLE STEP
     if tasks:
         return handle_single_task(tasks[0])
 
+    # AI fallback
     ai_result = interpret_command(command)
 
     if ai_result:

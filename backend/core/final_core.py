@@ -6,7 +6,7 @@ from memory.session_db import session_db
 
 # ✅ STEP 102
 from memory.experience_memory import save_experience
-
+from brain.pattern_engine import get_frequent_command
 
 class FinalCore:
 
@@ -56,6 +56,13 @@ class FinalCore:
 
         session_db.save("last", "ok")
 
+
+    
+
+patterns = get_frequent_command()
+
+if patterns:
+    print("📊 Frequent actions:", patterns[:2])
 
 # global instance
 final_core = FinalCore()
