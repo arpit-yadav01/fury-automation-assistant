@@ -2,10 +2,14 @@ import json
 import os
 from datetime import datetime
 
-DB_PATH = os.path.join("memory", "experience_memory.json")
+DB_PATH = os.path.join("memory", "experience.json")
 
 
-def load_memory():
+# =========================
+# LOAD
+# =========================
+
+def load_experiences():
 
     if not os.path.exists(DB_PATH):
         return []
@@ -17,45 +21,46 @@ def load_memory():
         return []
 
 
-def save_memory(data):
+# =========================
+# SAVE
+# =========================
+
+def save_experience(command, plan, result=True):
+
+    data = load_experiences()
+
+    data.append({
+        "command": command,
+        "plan": plan,
+        "success": result,
+        "timestamp": str(datetime.now())
+    })
 
     with open(DB_PATH, "w") as f:
         json.dump(data, f, indent=2)
 
-
-# ---------------------
-
-def save_experience(command, plan, result=True):
-
-    memory = load_memory()
-
-    entry = {
-        "command": command,
-        "plan": plan,
-        "success": result,
-        "timestamp": datetime.now().isoformat()
-    }
-
-    memory.append(entry)
-
-    # keep memory size safe
-    if len(memory) > 100:
-        memory = memory[-100:]
-
-    save_memory(memory)
-
     print("Experience saved")
 
 
-# ---------------------
+# =========================
+# FIND SIMILAR (STEP 103)
+# =========================
 
 def find_similar(command):
 
-    memory = load_memory()
+    command = command.lower()
 
-    for item in reversed(memory):
+    data = load_experiences()
 
-        if item["command"] == command and item["success"]:
-            return item
+    for exp in reversed(data):  # recent first
+
+        cmd = exp.get("command", "").lower()
+
+        if cmd == command:
+            return exp
+
+        # partial match
+        if command in cmd or cmd in command:
+            return exp
 
     return None
