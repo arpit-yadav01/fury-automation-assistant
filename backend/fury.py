@@ -157,7 +157,6 @@
 
 
 
-
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -171,6 +170,9 @@ from voice.text_to_speech import speak
 from agents.register_agents import register_all_agents
 from agents.agent_controller import controller
 from agents.jarvis_controller import jarvis
+
+# ✅ STEP 102 FIX
+from core.final_core import final_core
 
 
 voice_mode = False
@@ -314,15 +316,15 @@ def start_fury():
             continue
 
         # =========================
-        # 🔥 CORRECT PIPELINE (FINAL FIX)
+        # ✅ FINAL PIPELINE (FIXED)
         # =========================
 
         print("\nSending to Agent System...")
 
         speak("Executing")
 
-        # ✅ THIS IS THE REAL FIX
-        controller.execute(command)
+        # ✅ USE FINAL CORE (VERY IMPORTANT)
+        final_core.execute(command)
 
         speak("Done")
 
