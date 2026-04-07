@@ -347,7 +347,8 @@ def create_plan(command):
     exp = find_similar(command)
 
     if exp and exp.get("success"):
-        print("⚡ Using past experience")
+        if not memory.get_action():
+            print("⚡ Using past experience")
         return exp.get("plan")
 
     # -------------------------
