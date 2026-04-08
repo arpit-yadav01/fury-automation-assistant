@@ -70,5 +70,331 @@
     "plan": "type hlelo arpit",
     "success": true,
     "timestamp": "2026-04-07T13:51:21.163152"
+  },
+  {
+    "command": "open youtube and search lofi",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "lofi"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 19:13:40.759834"
+  },
+  {
+    "command": "open youtube and search lofi",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "lofi"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 19:13:57.206303"
+  },
+  {
+    "command": "open youtube and search sad",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "sad"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 19:14:22.128394"
+  },
+  {
+    "command": "open notepad and type hloo bhai",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "open_app",
+            "app": "notepad",
+            "raw": "open notepad"
+          }
+        },
+        {
+          "action": "type",
+          "text": "hloo bhai"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 19:14:56.117639"
+  },
+  {
+    "command": "open notepad and type hloo bhai kaisa h",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "open_app",
+            "app": "notepad",
+            "raw": "open notepad"
+          }
+        },
+        {
+          "action": "type",
+          "text": "hloo bhai kaisa h"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 19:15:12.602250"
+  },
+  {
+    "command": "open youtube and search sad",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "sad"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 19:15:35.850731"
+  },
+  {
+    "command": "open youtube and search lofi",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "lofi"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 19:16:30.633649"
+  },
+  {
+    "command": "open youtube and search lofi",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "lofi"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 19:16:48.326458"
+  },
+  {
+    "command": "open youtube and search sad",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "sad"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 19:17:10.837172"
+  },
+  {
+    "command": "open youtube and search sad",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "sad"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 19:17:35.916385"
+  },
+  {
+    "command": "create test5342.py and write python bubble sort",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "create test5342.py"
+          }
+        },
+        {
+          "action": "type",
+          "text": "python bubble sort"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 19:18:10.873594"
   }
 ]
