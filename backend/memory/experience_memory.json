@@ -396,5 +396,335 @@
     },
     "success": true,
     "timestamp": "2026-04-08 19:18:10.873594"
+  },
+  {
+    "command": "create test5342.py and write python bubble sort",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "create test5342.py"
+          }
+        },
+        {
+          "action": "type",
+          "text": "python bubble sort"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 21:10:53.885631"
+  },
+  {
+    "command": "open youtube and search lofi song",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "lofi song"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 21:11:37.738543"
+  },
+  {
+    "command": "open youtube and search lofi song",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "lofi song"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 21:11:57.910407"
+  },
+  {
+    "command": "open youtube and search lofi song",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "lofi song"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 21:12:12.968085"
+  },
+  {
+    "command": "open youtube and search lofi song",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "lofi song"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 21:12:37.146284"
+  },
+  {
+    "command": "open youtube and search lofi song",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "lofi song"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 21:13:06.929002"
+  },
+  {
+    "command": "search lofi",
+    "plan": {
+      "workflow": [
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "lofi"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 21:14:02.613488"
+  },
+  {
+    "command": "search sad",
+    "plan": {
+      "workflow": [
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "sad"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 21:14:23.904152"
+  },
+  {
+    "command": "open youtube and search happy song",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "happy song"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 21:15:10.629939"
+  },
+  {
+    "command": "open notepad and type hello world",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "open_app",
+            "app": "notepad",
+            "raw": "open notepad"
+          }
+        },
+        {
+          "action": "type",
+          "text": "hello world"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 21:15:40.620630"
+  },
+  {
+    "command": "open google and search ai tools",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.google.com"
+        },
+        {
+          "action": "wait",
+          "time": 2
+        },
+        {
+          "action": "press",
+          "key": "/"
+        },
+        {
+          "action": "wait",
+          "time": 1
+        },
+        {
+          "action": "type",
+          "text": "ai tools"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-08 21:16:13.159148"
   }
 ]

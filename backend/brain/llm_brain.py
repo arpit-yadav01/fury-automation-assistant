@@ -44,3 +44,37 @@ def interpret_with_llm(command):
 
     except Exception:
         return None
+    
+def generate_code(task_description):
+    """Generate raw code — returns string, not JSON."""
+
+    if client is None:
+        print("LLM client not available")
+        return None
+
+    try:
+
+        response = client.chat.completions.create(
+            model="llama3-70b-8192",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a code generator. "
+                        "Return ONLY raw code. "
+                        "No explanation. No markdown. No backticks. "
+                        "Just working code."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": task_description
+                }
+            ]
+        )
+
+        return response.choices[0].message.content.strip()
+
+    except Exception as e:
+        print("Code gen error:", e)
+        return None  
