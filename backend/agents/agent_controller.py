@@ -74,6 +74,11 @@ class AgentController:
 
                     # continue chain
                     if isinstance(result, dict) or isinstance(result, list):
+
+    # 🔥 PREVENT SAME LOOP
+                        if result == current:
+                            return  
+
                         current = result
                         continue
 

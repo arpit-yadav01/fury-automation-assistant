@@ -70,10 +70,10 @@ class ExecutorAgent(BaseAgent):
 
             print("ExecutorAgent → skill:", intent)
 
-            success = execute_skill(task)
+            success = execute_skill(intent, task)
 
-            if not success:
-                print("Skill failed:", intent)
+            if isinstance(success, dict):
+                return success
 
             return
 
