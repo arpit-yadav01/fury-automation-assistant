@@ -8,13 +8,9 @@ def normalize(command):
     return command.lower().strip()
 
 
-# =========================
-# BUILD SKILLS
-# =========================
-
 def build_auto_skills():
 
-    AUTO_SKILLS.clear()  # 🔥 important
+    AUTO_SKILLS.clear()
 
     data = load_experiences()
 
@@ -43,10 +39,7 @@ def build_auto_skills():
     return AUTO_SKILLS
 
 
-# =========================
-# 🔥 STEP 105 — SMART MATCH
-# =========================
-
+# ✅ FIXED — STRICT MATCH
 def find_best_skill(user_command):
 
     user_command = normalize(user_command)
@@ -55,30 +48,18 @@ def find_best_skill(user_command):
 
     for name, data in skills.items():
 
-        cmd = data.get("command", "")
+        cmd = data.get("command")
         plan = data.get("plan")
 
         if not cmd or not plan:
             continue
 
-        # exact contains
-        if cmd in user_command:
-            return name, plan
-
-        # partial match
-        words = cmd.split()
-
-        match_count = sum(1 for w in words if w in user_command)
-
-        if match_count >= max(1, len(words) // 2):
+        # ✅ ONLY EXACT MATCH
+        if user_command == cmd:
             return name, plan
 
     return None, None
 
-
-# =========================
-# NAME GENERATOR
-# =========================
 
 def generate_skill_name(command):
 
@@ -92,11 +73,3 @@ def generate_skill_name(command):
         return "search_google"
 
     return command.replace(" ", "_")[:30]
-
-
-# =========================
-# DEBUG (optional)
-# =========================
-
-if __name__ == "__main__":
-    print(build_auto_skills())
