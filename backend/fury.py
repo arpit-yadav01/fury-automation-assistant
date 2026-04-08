@@ -337,3 +337,95 @@ def start_fury():
 
 if __name__ == "__main__":
     start_fury()
+
+
+from agents.base_agent import BaseAgent
+from core.thinking_engine import think
+
+
+class ThinkingAgent(BaseAgent):
+
+    def __init__(self):
+        super().__init__("ThinkingAgent")
+
+    # -------------------------
+
+    def can_handle(self, task):
+
+        # ONLY handle raw string input
+        if isinstance(task, str):
+            return True
+
+        # DO NOT block dict tasks (CRITICAL FIX)
+        return False
+
+    # -------------------------
+
+    def handle(self, task):
+
+        result = think(task)
+
+        if result:
+            print("Thinking → structured task")
+            return result
+
+        # 🔥 IMPORTANT: fallback to planner
+        return {
+            "intent": "parse_command",
+            "text": task
+        }
+
+
+        
+import json
+import os
+from datetime import datetime
+
+DB_PATH = os.path.join("memory", "experience.json")
+
+
+def load_experiences():
+
+    if not os.path.exists(DB_PATH):
+        return []
+
+    try:
+        with open(DB_PATH, "r") as f:
+            return json.load(f)
+    except:
+        return []
+
+
+def save_experience(command, plan, result=True):
+
+    data = load_experiences()
+
+    data.append({
+        "command": command,
+        "plan": plan,
+        "success": result,
+        "timestamp": str(datetime.now())
+    })
+
+    with open(DB_PATH, "w") as f:
+        json.dump(data, f, indent=2)
+
+    print("Experience saved")
+
+
+# ✅ FIXED — STRICT MATCH ONLY
+def find_similar(command):
+
+    command = command.lower().strip()
+
+    data = load_experiences()
+
+    for exp in reversed(data):
+
+        cmd = exp.get("command", "").lower().strip()
+
+        if cmd == command:
+            return exp
+
+    return None
+
