@@ -166,12 +166,8 @@ from brain.context_memory import memory
 from voice.speech_to_text import listen_once
 from voice.text_to_speech import speak
 
-# AGENTS
 from agents.register_agents import register_all_agents
-from agents.agent_controller import controller
 from agents.jarvis_controller import jarvis
-
-# ✅ STEP 102 FIX
 from core.final_core import final_core
 
 
@@ -186,13 +182,11 @@ jarvis_mode = False
 def show_memory():
 
     print("---- MEMORY ----")
-
     print("App:", memory.get_app())
     print("Window:", memory.get_window())
     print("Site:", memory.get_site())
     print("File:", memory.get_file())
     print("Action:", memory.get_action())
-
     print("----------------")
 
 
@@ -204,11 +198,7 @@ def get_command():
 
     global voice_mode, jarvis_mode
 
-    if jarvis_mode:
-        text = listen_once()
-        return text if text else ""
-
-    if voice_mode:
+    if jarvis_mode or voice_mode:
         text = listen_once()
         return text if text else ""
 
@@ -228,7 +218,6 @@ def start_fury():
     print("voice mode / jarvis mode / exit")
     print("=================================")
 
-    # 🔥 REGISTER ALL AGENTS
     register_all_agents()
 
     while True:
@@ -238,7 +227,7 @@ def start_fury():
         if not command:
             continue
 
-        cmd = command.lower()
+        cmd = command.lower().strip()
 
         # -------------------------
         # EXIT
@@ -269,7 +258,6 @@ def start_fury():
 
             jarvis_mode = True
             voice_mode = False
-
             speak("Jarvis mode activated")
 
             while jarvis_mode:
@@ -279,7 +267,7 @@ def start_fury():
                 if not text:
                     continue
 
-                if text == "stop jarvis":
+                if text.lower().strip() == "stop jarvis":
                     jarvis_mode = False
                     break
 
@@ -291,42 +279,30 @@ def start_fury():
         # GOAL MODE
         # -------------------------
 
-        if command.startswith("goal "):
-
-            goal = command.replace("goal ", "")
-
+        if cmd.startswith("goal "):
+            goal = command[5:].strip()
             speak("Goal mode")
-
             jarvis.run_loop(goal)
-
             continue
 
         # -------------------------
         # AUTO MODE
         # -------------------------
 
-        if command.startswith("auto "):
-
-            goal = command.replace("auto ", "")
-
+        if cmd.startswith("auto "):
+            goal = command[5:].strip()
             speak("Autonomous mode")
-
             run_autonomous(goal)
-
             continue
 
         # =========================
-        # ✅ FINAL PIPELINE (FIXED)
+        # MAIN PIPELINE
         # =========================
 
         print("\nSending to Agent System...")
 
-        speak("Executing")
-
-        # ✅ USE FINAL CORE (VERY IMPORTANT)
+        # context enrichment + execution happens inside final_core
         final_core.execute(command)
-
-        speak("Done")
 
         show_memory()
 
@@ -337,95 +313,3 @@ def start_fury():
 
 if __name__ == "__main__":
     start_fury()
-
-
-from agents.base_agent import BaseAgent
-from core.thinking_engine import think
-
-
-class ThinkingAgent(BaseAgent):
-
-    def __init__(self):
-        super().__init__("ThinkingAgent")
-
-    # -------------------------
-
-    def can_handle(self, task):
-
-        # ONLY handle raw string input
-        if isinstance(task, str):
-            return True
-
-        # DO NOT block dict tasks (CRITICAL FIX)
-        return False
-
-    # -------------------------
-
-    def handle(self, task):
-
-        result = think(task)
-
-        if result:
-            print("Thinking → structured task")
-            return result
-
-        # 🔥 IMPORTANT: fallback to planner
-        return {
-            "intent": "parse_command",
-            "text": task
-        }
-
-
-        
-import json
-import os
-from datetime import datetime
-
-DB_PATH = os.path.join("memory", "experience.json")
-
-
-def load_experiences():
-
-    if not os.path.exists(DB_PATH):
-        return []
-
-    try:
-        with open(DB_PATH, "r") as f:
-            return json.load(f)
-    except:
-        return []
-
-
-def save_experience(command, plan, result=True):
-
-    data = load_experiences()
-
-    data.append({
-        "command": command,
-        "plan": plan,
-        "success": result,
-        "timestamp": str(datetime.now())
-    })
-
-    with open(DB_PATH, "w") as f:
-        json.dump(data, f, indent=2)
-
-    print("Experience saved")
-
-
-# ✅ FIXED — STRICT MATCH ONLY
-def find_similar(command):
-
-    command = command.lower().strip()
-
-    data = load_experiences()
-
-    for exp in reversed(data):
-
-        cmd = exp.get("command", "").lower().strip()
-
-        if cmd == command:
-            return exp
-
-    return None
-
