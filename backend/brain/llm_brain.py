@@ -1,6 +1,6 @@
-
 import re
 import os
+import json
 from openai import OpenAI
 
 GROQ_KEY = os.getenv("GROQ_API_KEY")
@@ -22,11 +22,11 @@ def interpret_with_llm(command):
     try:
 
         response = client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             messages=[
                 {
                     "role": "system",
-                    "content": "Return ONLY JSON list of tasks"
+                    "content": "Return ONLY JSON list of tasks. No explanation. No markdown."
                 },
                 {
                     "role": "user",
@@ -36,7 +36,6 @@ def interpret_with_llm(command):
         )
 
         text = response.choices[0].message.content.strip()
-
         text = re.sub(r"```json", "", text)
         text = re.sub(r"```", "", text)
 
@@ -44,7 +43,8 @@ def interpret_with_llm(command):
 
     except Exception:
         return None
-    
+
+
 def generate_code(task_description):
     """Generate raw code — returns string, not JSON."""
 
@@ -55,15 +55,15 @@ def generate_code(task_description):
     try:
 
         response = client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",  # ✅ FIXED MODEL
             messages=[
                 {
                     "role": "system",
                     "content": (
                         "You are a code generator. "
-                        "Return ONLY raw code. "
+                        "Return ONLY raw Python code. "
                         "No explanation. No markdown. No backticks. "
-                        "Just working code."
+                        "Just working code that runs directly."
                     )
                 },
                 {
@@ -77,4 +77,4 @@ def generate_code(task_description):
 
     except Exception as e:
         print("Code gen error:", e)
-        return None  
+        return None
