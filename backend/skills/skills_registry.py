@@ -392,12 +392,13 @@ def skill_type_text(task):
 def skill_write_code_task(task):
 
     task_text = task.get("task") or task.get("text") or task.get("code")
+    filename = task.get("filename")
 
     if not task_text:
         print("No task for write_code")
         return False
 
-    # use dedicated code generator
+    # generate code
     from brain.llm_brain import generate_code
 
     print(f"Generating code for: {task_text}")
@@ -405,23 +406,35 @@ def skill_write_code_task(task):
     code = generate_code(task_text)
 
     if not code:
-        # hard fallback
         code = f"# {task_text}\npass\n"
 
     print(f"Writing code ({len(code)} chars)")
 
-    # focus correct window
+    # ✅ if we have a filename, write directly to disk — no window needed
+    if filename:
+
+        try:
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(code)
+
+            print(f"✅ Code written to file: {filename}")
+            memory.set_file(filename)
+            memory.set_action("write_code")
+            return True
+
+        except Exception as e:
+            print(f"File write error: {e}")
+            # fall through to window typing
+
+    # ✅ no filename — type into active window
     win = memory.get_window()
 
     if win:
         focus_window(win)
 
     wait(0.5)
-
     type_text(code)
-
     memory.set_action("write_code")
-
     return True
 
 
