@@ -9,6 +9,7 @@
 # from browser.browser_agent import open_website
 
 # from brain.context_memory import memory
+# from brain.failure_memory import save_failure      # ✅ STEP 108
 # from skills.skill_manager import execute_skill
 
 
@@ -35,46 +36,28 @@
 
 #                 print("STEP:", step)
 
-#                 # -----------------------
-#                 # OPEN APP
-#                 # -----------------------
 #                 if action == "open_app":
 
 #                     name = step["name"]
-
 #                     open_application(name)
-
 #                     wait(3)
-
 #                     focus_window(name)
-
 #                     memory.set_app(name)
 #                     memory.set_window(name)
 #                     memory.set_action("open_app")
-
 #                     break
 
-#                 # -----------------------
-#                 # OPEN URL (🔥 FINAL FIX)
-#                 # -----------------------
 #                 elif action == "open_url":
 
 #                     url = step["url"]
-
 #                     open_website(url)
-
-#                     wait(4)
-
-#                     # 🔥 STRONG FOCUS
+#                     wait(3)
 #                     focus_window("chrome")
-
-#                     # 🔥 FORCE CORRECT TAB
 #                     hotkey("ctrl", "l")
-#                     wait(0.5)
+#                     wait(0.3)
 #                     press("esc")
 #                     wait(0.3)
 
-#                     # 🔥 CONTEXT SET
 #                     if "youtube" in url:
 #                         memory.set_site("youtube")
 #                     elif "google" in url:
@@ -85,20 +68,13 @@
 #                     memory.set_app("browser")
 #                     memory.set_window("chrome")
 #                     memory.set_action("open_website")
-
 #                     break
 
-#                 # -----------------------
-#                 # WAIT
-#                 # -----------------------
 #                 elif action == "wait":
 
 #                     wait(step.get("time", 1))
 #                     break
 
-#                 # -----------------------
-#                 # TYPE (🔥 CLEAN)
-#                 # -----------------------
 #                 elif action == "type":
 
 #                     app = memory.get_app()
@@ -106,7 +82,6 @@
 #                     if app == "browser":
 #                         focus_window("chrome")
 #                         wait(0.5)
-
 #                     else:
 #                         win = memory.get_window()
 #                         if win:
@@ -114,91 +89,63 @@
 #                             wait(0.5)
 
 #                     print("Typing:", step["text"])
-
 #                     type_text(step["text"])
-
 #                     memory.set_action("type_text")
-
 #                     break
 
-#                 # -----------------------
-#                 # PRESS
-#                 # -----------------------
 #                 elif action == "press":
 
 #                     press(step["key"])
 #                     break
 
-#                 # -----------------------
-#                 # HOTKEY
-#                 # -----------------------
 #                 elif action == "hotkey":
 
 #                     hotkey(*step["keys"])
 #                     break
 
-#                 # -----------------------
-#                 # CLICK
-#                 # -----------------------
 #                 elif action == "click":
 
 #                     click()
 #                     break
 
-#                 # -----------------------
-#                 # CREATE FILE
-#                 # -----------------------
 #                 elif action == "create_file":
 
 #                     path = step["path"]
-
 #                     create_file(path)
-
 #                     memory.set_file(path)
 #                     memory.set_action("create_file")
-
 #                     break
 
-#                 # -----------------------
-#                 # TERMINAL
-#                 # -----------------------
 #                 elif action == "terminal":
 
 #                     run_terminal_command(step["cmd"])
-
 #                     memory.set_action("run_terminal")
-
 #                     break
 
-#                 # -----------------------
-#                 # SKILL (SAFE)
-#                 # -----------------------
 #                 elif action == "skill":
 
 #                     task = step.get("data")
 
-#                     # 🔥 PREVENT DUPLICATE WEBSITE OPEN
-#                     if task.get("intent") == "open_website":
+#                     if task and task.get("intent") == "open_website":
 #                         print("Skipping duplicate open_website skill")
 #                         break
 
 #                     if task:
-
 #                         ok = execute_skill(task)
-
 #                         if ok:
 #                             break
 
 #                     raise Exception("Skill failed")
 
 #                 else:
-
-#                     raise Exception("Unknown action")
+#                     raise Exception("Unknown action: " + str(action))
 
 #             except Exception as e:
 
-#                 retry += 1
+#                 # ✅ STEP 108 — learn from failure
+#                 save_failure(step, e)
 
+#                 retry += 1
 #                 print("Step error:", e, "Retry:", retry)
 
 #                 if retry > MAX_STEP_RETRY:
@@ -206,6 +153,9 @@
 #                     break
 
 
+# execution/workflow_engine.py
+# STEP 125 — safety sandbox
+# STEP 126 — permission system
 
 import time
 
@@ -218,9 +168,14 @@ from developer.terminal_engine import run_terminal_command
 from browser.browser_agent import open_website
 
 from brain.context_memory import memory
-from brain.failure_memory import save_failure      # ✅ STEP 108
+from brain.failure_memory import save_failure
 from skills.skill_manager import execute_skill
 
+# STEP 125
+from core.safety_sandbox import is_blocked, is_risky, confirm_risky
+
+# STEP 126
+from core.permission_system import check_permission, get_action_key
 
 MAX_STEP_RETRY = 2
 
@@ -235,6 +190,35 @@ def run_workflow(steps):
 
     for step in steps:
 
+        # -------------------------
+        # STEP 125 — SAFETY CHECK
+        # -------------------------
+
+        blocked, reason = is_blocked(step)
+        if blocked:
+            print(f"🛡️  Fury: Blocked — {reason}")
+            continue
+
+        risky, risk_reason = is_risky(step)
+        if risky:
+            confirmed = confirm_risky(step)
+            if not confirmed:
+                print("Fury: Cancelled.")
+                continue
+
+        # -------------------------
+        # STEP 126 — PERMISSION CHECK
+        # -------------------------
+
+        action_key = get_action_key(step)
+        if action_key and not check_permission(action_key):
+            print(f"🚫 Skipping step — no permission for '{action_key}'")
+            continue
+
+        # -------------------------
+        # EXECUTE STEP
+        # -------------------------
+
         retry = 0
 
         while retry <= MAX_STEP_RETRY:
@@ -242,11 +226,9 @@ def run_workflow(steps):
             try:
 
                 action = step.get("action")
-
                 print("STEP:", step)
 
                 if action == "open_app":
-
                     name = step["name"]
                     open_application(name)
                     wait(3)
@@ -257,7 +239,6 @@ def run_workflow(steps):
                     break
 
                 elif action == "open_url":
-
                     url = step["url"]
                     open_website(url)
                     wait(3)
@@ -266,28 +247,23 @@ def run_workflow(steps):
                     wait(0.3)
                     press("esc")
                     wait(0.3)
-
                     if "youtube" in url:
                         memory.set_site("youtube")
                     elif "google" in url:
                         memory.set_site("google")
                     else:
                         memory.set_site(url)
-
                     memory.set_app("browser")
                     memory.set_window("chrome")
                     memory.set_action("open_website")
                     break
 
                 elif action == "wait":
-
                     wait(step.get("time", 1))
                     break
 
                 elif action == "type":
-
                     app = memory.get_app()
-
                     if app == "browser":
                         focus_window("chrome")
                         wait(0.5)
@@ -296,29 +272,24 @@ def run_workflow(steps):
                         if win:
                             focus_window(win)
                             wait(0.5)
-
                     print("Typing:", step["text"])
                     type_text(step["text"])
                     memory.set_action("type_text")
                     break
 
                 elif action == "press":
-
                     press(step["key"])
                     break
 
                 elif action == "hotkey":
-
                     hotkey(*step["keys"])
                     break
 
                 elif action == "click":
-
                     click()
                     break
 
                 elif action == "create_file":
-
                     path = step["path"]
                     create_file(path)
                     memory.set_file(path)
@@ -326,37 +297,28 @@ def run_workflow(steps):
                     break
 
                 elif action == "terminal":
-
                     run_terminal_command(step["cmd"])
                     memory.set_action("run_terminal")
                     break
 
                 elif action == "skill":
-
                     task = step.get("data")
-
                     if task and task.get("intent") == "open_website":
                         print("Skipping duplicate open_website skill")
                         break
-
                     if task:
                         ok = execute_skill(task)
                         if ok:
                             break
-
                     raise Exception("Skill failed")
 
                 else:
                     raise Exception("Unknown action: " + str(action))
 
             except Exception as e:
-
-                # ✅ STEP 108 — learn from failure
                 save_failure(step, e)
-
                 retry += 1
                 print("Step error:", e, "Retry:", retry)
-
                 if retry > MAX_STEP_RETRY:
                     print("Skipping step")
                     break

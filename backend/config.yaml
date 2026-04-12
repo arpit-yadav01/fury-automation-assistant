@@ -1,0 +1,95 @@
+# Fury AI Assistant — Configuration
+# Copy this file to config.yaml and customize
+# config.yaml is gitignored — safe to put personal preferences here
+
+# -------------------------
+# FURY IDENTITY
+# -------------------------
+fury:
+  name: "Fury"
+  version: "1.0.0"
+  language: "en"
+
+# -------------------------
+# AI MODEL
+# -------------------------
+ai:
+  provider: "groq"               # groq | openai
+  model: "llama-3.3-70b-versatile"
+  temperature: 0.3
+  max_tokens: 1000
+  vision_model: "meta-llama/llama-4-scout-17b-16e-instruct"
+
+# -------------------------
+# VOICE
+# -------------------------
+voice:
+  enabled: true
+  stt_engine: "google"           # google | whisper
+  tts_engine: "pyttsx3"          # pyttsx3 | elevenlabs
+  tts_rate: 180                  # words per minute
+  wake_word: "hey fury"
+
+# -------------------------
+# BROWSER
+# -------------------------
+browser:
+  engine: "playwright"
+  default: "chrome"
+  headless: false
+  wait_after_open: 3             # seconds
+
+# -------------------------
+# MEMORY
+# -------------------------
+memory:
+  experience_limit: 500          # max entries in experience_memory.json
+  reflection_limit: 100          # max entries in reflections.json
+  episode_limit: 1000            # max rows in episodes table
+  pattern_report_every: 10       # run pattern analysis every N commands
+
+# -------------------------
+# CONFIDENCE
+# -------------------------
+confidence:
+  high_threshold: 0.75           # proceed without asking
+  low_threshold: 0.40            # ask before acting
+  ask_on_risky: true             # always ask for risky actions
+
+# -------------------------
+# SAFETY
+# -------------------------
+safety:
+  sandbox_mode: false            # true = no destructive actions allowed
+  confirm_delete: true           # always confirm file deletion
+  confirm_terminal: true         # always confirm terminal commands
+  blocked_commands:              # commands Fury will never run
+    - "format c:"
+    - "rm -rf /"
+    - "del /f /s /q c:\\"
+    - ":(){:|:&};"
+
+# -------------------------
+# UI / DISPLAY
+# -------------------------
+ui:
+  show_thinking: true            # print chain-of-thought block
+  show_suggestions: true         # print intent predictions
+  show_reflection: true          # print reflection after each command
+  show_confidence: true          # print confidence scores
+  show_memory: true              # print memory after each command
+
+# -------------------------
+# SKILLS
+# -------------------------
+skills:
+  auto_learn_threshold: 3        # build auto-skill after N repeats
+  skill_dir: "skills/custom"     # where custom skills are stored
+
+# -------------------------
+# LOGGING
+# -------------------------
+logging:
+  enabled: true
+  log_file: "memory/fury.log"
+  level: "INFO"                  # DEBUG | INFO | WARNING | ERROR

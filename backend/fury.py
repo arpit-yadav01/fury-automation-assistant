@@ -157,6 +157,7 @@
 
 
 
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -180,7 +181,6 @@ jarvis_mode = False
 # -------------------------
 
 def show_memory():
-
     print("---- MEMORY ----")
     print("App:", memory.get_app())
     print("Window:", memory.get_window())
@@ -195,13 +195,10 @@ def show_memory():
 # -------------------------
 
 def get_command():
-
     global voice_mode, jarvis_mode
-
     if jarvis_mode or voice_mode:
         text = listen_once()
         return text if text else ""
-
     return input(">>> ").strip()
 
 
@@ -255,24 +252,17 @@ def start_fury():
             continue
 
         if cmd == "jarvis mode":
-
             jarvis_mode = True
             voice_mode = False
             speak("Jarvis mode activated")
-
             while jarvis_mode:
-
                 text = listen_once()
-
                 if not text:
                     continue
-
                 if text.lower().strip() == "stop jarvis":
                     jarvis_mode = False
                     break
-
                 jarvis.run_loop(text)
-
             continue
 
         # -------------------------
@@ -295,15 +285,83 @@ def start_fury():
             run_autonomous(goal)
             continue
 
+        # -------------------------
+        # STEP 126 — PERMISSIONS
+        # -------------------------
+
+        if cmd in ("permissions", "show permissions"):
+            from core.permission_system import show_permissions
+            show_permissions()
+            continue
+
+        if cmd.startswith("fury permission grant "):
+            cap = cmd.replace("fury permission grant ", "").strip()
+            from core.permission_system import grant_permission
+            grant_permission(cap)
+            continue
+
+        if cmd.startswith("fury permission deny "):
+            cap = cmd.replace("fury permission deny ", "").strip()
+            from core.permission_system import deny_permission
+            deny_permission(cap)
+            continue
+
+        if cmd == "fury permission reset":
+            from core.permission_system import reset_permissions
+            reset_permissions()
+            continue
+
+        # -------------------------
+        # STATS / DEBUG
+        # -------------------------
+
+        if cmd == "fury stats":
+            final_core.show_stats()
+            continue
+
+        if cmd == "fury patterns":
+            final_core.show_patterns()
+            continue
+
+        if cmd == "fury failures":
+            final_core.show_failures()
+            continue
+
+        if cmd.startswith("fury knows "):
+            concept = cmd.replace("fury knows ", "").strip()
+            final_core.what_do_i_know(concept)
+            continue
+
+        if cmd == "fury help":
+            print("""
+=== FURY COMMANDS ===
+exit                          — shutdown
+voice mode                    — switch to voice input
+text mode                     — switch to text input
+jarvis mode                   — continuous voice loop
+goal <task>                   — goal-based execution
+auto <task>                   — autonomous mode
+
+permissions                   — show all permissions
+fury permission grant <cap>   — grant a capability
+fury permission deny <cap>    — deny a capability
+fury permission reset          — reset all permissions
+
+fury stats                    — episode stats
+fury patterns                 — pattern report
+fury failures                 — commands that need fixing
+fury knows <concept>          — knowledge graph lookup
+fury help                     — show this help
+=====================
+""")
+            continue
+
         # =========================
         # MAIN PIPELINE
         # =========================
 
         print("\nSending to Agent System...")
-
-        # context enrichment + execution happens inside final_core
         final_core.execute(command)
-
         show_memory()
 
 

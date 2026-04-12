@@ -1,5 +1,6 @@
 
-
+# # execution/task_planner.py
+# # STEP 112 — multi_plan() added as final fallback before unknown
 
 # from brain.command_parser import parse_command
 # from brain.llm_brain import interpret_with_llm
@@ -9,106 +10,97 @@
 # from memory.experience_memory import find_similar
 # from skills.auto_skill_builder import find_best_skill
 
-# print("🔥 FINAL TASK PLANNER (PHASE-8 FIXED)")
+# # STEP 112
+# from execution.planner_v2 import multi_plan
 
+# print("🔥 FINAL TASK PLANNER (PHASE-9 STEP-112)")
 
-# # -------------------------
-# # SPLIT COMMAND
-# # -------------------------
 
 # def split_command(command):
-
 #     command = command.replace(",", " and ")
 #     command = command.replace(" then ", " and ")
-
 #     return [p.strip() for p in command.split(" and ") if p.strip()]
 
 
-# # -------------------------
-# # APPLY CONTEXT
-# # -------------------------
-
-# def apply_context(task):
-
+# def apply_context(task, current_site=None):
 #     if task.get("intent") == "web_search":
-
-#         site = memory.get_site()
-
-#         if site:
-#             task["site"] = site
-
+#         if not task.get("site"):
+#             site = current_site or memory.get_site()
+#             if site:
+#                 task["site"] = site
 #     return task
 
-
-# # =========================
-# # BUILD WORKFLOW
-# # =========================
 
 # def build_workflow(tasks):
 
 #     steps = []
 #     current_site = None
+#     current_file = None
 
 #     for t in tasks:
 
-#         t = apply_context(t)
+#         t = apply_context(t, current_site)
 #         intent = t.get("intent")
 
 #         if intent == "open_website":
 
 #             url = t.get("url")
-
 #             steps.append({"action": "open_url", "url": url})
 
 #             if "youtube" in url:
 #                 current_site = "youtube"
 #             elif "google" in url:
 #                 current_site = "google"
+#             else:
+#                 current_site = url
 
 #         elif intent == "web_search":
 
-#             query = t.get("query")
+#             query = t.get("query", "")
 #             site = t.get("site") or current_site or "google"
+#             query_encoded = query.replace(" ", "+")
 
 #             if site == "youtube":
-
-#                 steps.append({"action": "wait", "time": 2})
-#                 steps.append({"action": "press", "key": "/"})
-#                 steps.append({"action": "wait", "time": 1})
-#                 steps.append({"action": "type", "text": query})
-#                 steps.append({"action": "press", "key": "enter"})
-
-#             else:
-
 #                 steps.append({
 #                     "action": "open_url",
-#                     "url": "https://www.google.com"
+#                     "url": f"https://www.youtube.com/results?search_query={query_encoded}"
+#                 })
+#             else:
+#                 steps.append({
+#                     "action": "open_url",
+#                     "url": f"https://www.google.com/search?q={query_encoded}"
 #                 })
 
-#                 steps.append({"action": "wait", "time": 2})
-#                 steps.append({"action": "type", "text": query})
-#                 steps.append({"action": "press", "key": "enter"})
-
 #         elif intent == "type_text":
+#             steps.append({"action": "type", "text": t.get("text")})
 
+#         elif intent == "create_file":
+#             filename = t.get("filename")
+#             current_file = filename
+#             steps.append({"action": "create_file", "path": filename})
+
+#         elif intent == "write_code":
 #             steps.append({
-#                 "action": "type",
-#                 "text": t.get("text")
+#                 "action": "skill",
+#                 "data": {
+#                     "intent": "write_code",
+#                     "task": t.get("task"),
+#                     "filename": current_file,
+#                 }
+#             })
+
+#         elif intent == "open_app":
+#             # ✅ use open_app action directly so workflow_engine handles it
+#             steps.append({
+#                 "action": "open_app",
+#                 "name": t.get("app")
 #             })
 
 #         else:
-
-#             steps.append({
-#                 "action": "skill",
-#                 "data": t
-#             })
+#             steps.append({"action": "skill", "data": t})
 
 #     return {"workflow": steps}
 
-
-# # =========================
-# # SINGLE TASK HANDLER
-# # =========================
 
 # def handle_single_task(task):
 
@@ -119,9 +111,12 @@
 
 #     raw = task.get("raw", "").lower()
 
-#     if "youtube" in raw and "search" in raw:
+#     if "youtube" in raw and ("search" in raw or "type" in raw):
 
-#         query = raw.replace("open youtube", "").replace("search", "").strip()
+#         query = raw
+#         for w in ["open youtube", "youtube", "search", "type"]:
+#             query = query.replace(w, "")
+#         query = query.strip()
 
 #         return build_workflow([
 #             {"intent": "open_website", "url": "https://www.youtube.com"},
@@ -129,55 +124,61 @@
 #         ])
 
 #     if intent == "open_app":
-#         return {"workflow": [{"action": "skill", "data": task}]}
+#         return {"workflow": [{"action": "open_app", "name": task.get("app")}]}
+
+#     if intent == "create_file":
+#         return build_workflow([task])
+
+#     if intent == "write_code":
+#         return build_workflow([task])
 
 #     return [task]
 
 
-# # =========================
-# # MAIN PLANNER
-# # =========================
-
 # def create_plan(command):
 
-#     # =========================
-#     # STEP 105 — SMART SKILL
-#     # =========================
-
+#     # -------------------------
+#     # SMART SKILL (exact match)
+#     # -------------------------
 #     skill_name, plan = find_best_skill(command)
 
 #     if plan and len(command.split()) <= 4:
+
 #         print(f"⚡ Smart skill used: {skill_name}")
+
 #         if isinstance(plan, dict) and "workflow" in plan:
 #             return plan
+
 #         if isinstance(plan, list):
 #             return {"workflow": plan}
 
-#     # =========================
-#     # STEP 103 — MEMORY
-#     # =========================
-
+#     # -------------------------
+#     # PAST EXPERIENCE
+#     # -------------------------
 #     exp = find_similar(command)
 
 #     if exp and exp.get("success"):
 
 #         plan = exp.get("plan")
 
-#         print("⚡ Using past experience")
+#         if isinstance(plan, str):
+#             print("⚠️ Skipping bad cached plan")
 
-#         if isinstance(plan, dict) and "workflow" in plan:
-#             return plan
+#         else:
+#             print("⚡ Using past experience")
 
-#         if isinstance(plan, list):
-#             return {"workflow": plan}
+#             if isinstance(plan, dict) and "workflow" in plan:
+#                 return plan
 
-#         if isinstance(plan, dict):
-#             return {"workflow": [plan]}
+#             if isinstance(plan, list):
+#                 return {"workflow": plan}
 
-#     # =========================
-#     # NORMAL FLOW
-#     # =========================
+#             if isinstance(plan, dict):
+#                 return {"workflow": [plan]}
 
+#     # -------------------------
+#     # NORMAL PARSER FLOW
+#     # -------------------------
 #     parts = split_command(command)
 #     tasks = []
 
@@ -191,91 +192,65 @@
 #         return build_workflow(tasks)
 
 #     if tasks:
-#         return handle_single_task(tasks[0])
+#         result = handle_single_task(tasks[0])
+#         # only return if it's not unknown
+#         if not _is_unknown(result):
+#             return result
 
+#     # -------------------------
+#     # AI INTERPRETER
+#     # -------------------------
 #     ai_result = interpret_command(command)
 
-#     if ai_result:
+#     if ai_result and not _is_unknown(ai_result):
 #         return handle_single_task(ai_result)
 
+#     # -------------------------
+#     # LLM INTERPRET
+#     # -------------------------
 #     llm_tasks = interpret_with_llm(command)
 
-#     if llm_tasks:
+#     if llm_tasks and not _is_unknown(llm_tasks):
 #         return build_workflow(llm_tasks)
 
-#     return [{"intent": "unknown"}]
+#     # -------------------------
+#     # STEP 112 — MULTI-HYPOTHESIS PLANNER
+#     # last resort before giving up
+#     # -------------------------
+#     print("Planner: falling back to PlannerV2 multi-hypothesis")
+#     multi = multi_plan(command)
 
-#     # =========================
-#     # STEP 103 — MEMORY (FIXED)
-#     # =========================
+#     if multi:
+#         return multi
 
-#     exp = find_similar(command)
-
-#     if exp and exp.get("success"):
-
-#         plan = exp.get("plan")
-
-#     # 🔥 SKIP BAD CACHE
-#     if isinstance(plan, str):
-#         print("⚠️ Skipping bad cached plan")
-
-#     else:
-#         print("⚡ Using past experience")
-
-#         if isinstance(plan, dict) and "workflow" in plan:
-#             return plan
-
-#         if isinstance(plan, list):
-#             return {"workflow": plan}
-
-#         if isinstance(plan, dict):
-#             return {"workflow": [plan]}
-
-#         # 🔥 NORMALIZE PLAN
-#         if isinstance(plan, dict) and "workflow" in plan:
-#             return plan
-
-#         if isinstance(plan, list):
-#             return {"workflow": plan}
-
-#         if isinstance(plan, dict):
-#             return {"workflow": [plan]}
-
-#         return [{"intent": "unknown"}]
-
-#     # =========================
-#     # NORMAL FLOW
-#     # =========================
-
-#     parts = split_command(command)
-
-#     tasks = []
-
-#     for part in parts:
-#         task = parse_command(part)
-#         if task:
-#             tasks.append(task)
-
-#     if len(tasks) > 1:
-#         print("Planner: building workflow")
-#         return build_workflow(tasks)
-
-#     if tasks:
-#         return handle_single_task(tasks[0])
-
-#     ai_result = interpret_command(command)
-
-#     if ai_result:
-#         return handle_single_task(ai_result)
-
-#     llm_tasks = interpret_with_llm(command)
-
-#     if llm_tasks:
-#         return build_workflow(llm_tasks)
-
+#     # -------------------------
+#     # TRULY UNKNOWN
+#     # -------------------------
 #     return [{"intent": "unknown"}]
 
 
+# # -------------------------
+# # HELPER
+# # -------------------------
+
+# def _is_unknown(result):
+#     """Check if a plan resolved to unknown — don't return these early."""
+#     if isinstance(result, list):
+#         return all(
+#             isinstance(r, dict) and r.get("intent") == "unknown"
+#             for r in result
+#         )
+#     if isinstance(result, dict):
+#         return result.get("intent") == "unknown"
+#     return False
+
+
+
+
+
+# execution/task_planner.py
+# STEP 112 — multi_plan() added as final fallback before unknown
+# FIX: build_workflow now skips non-dict items (strings from LLM)
 
 from brain.command_parser import parse_command
 from brain.llm_brain import interpret_with_llm
@@ -285,7 +260,10 @@ from brain.context_memory import memory
 from memory.experience_memory import find_similar
 from skills.auto_skill_builder import find_best_skill
 
-print("🔥 FINAL TASK PLANNER (PHASE-8 FIXED)")
+# STEP 112
+from execution.planner_v2 import multi_plan
+
+print("🔥 FINAL TASK PLANNER (PHASE-9 STEP-112)")
 
 
 def split_command(command):
@@ -295,6 +273,8 @@ def split_command(command):
 
 
 def apply_context(task, current_site=None):
+    if not isinstance(task, dict):
+        return task
     if task.get("intent") == "web_search":
         if not task.get("site"):
             site = current_site or memory.get_site()
@@ -311,12 +291,18 @@ def build_workflow(tasks):
 
     for t in tasks:
 
+        # ✅ FIX: skip strings or non-dicts from LLM output
+        if not isinstance(t, dict):
+            continue
+
         t = apply_context(t, current_site)
         intent = t.get("intent")
 
         if intent == "open_website":
 
             url = t.get("url")
+            if not url:
+                continue
             steps.append({"action": "open_url", "url": url})
 
             if "youtube" in url:
@@ -332,13 +318,11 @@ def build_workflow(tasks):
             site = t.get("site") or current_site or "google"
             query_encoded = query.replace(" ", "+")
 
-            # ✅ STEP 109 — direct URL, no typing needed
             if site == "youtube":
                 steps.append({
                     "action": "open_url",
                     "url": f"https://www.youtube.com/results?search_query={query_encoded}"
                 })
-
             else:
                 steps.append({
                     "action": "open_url",
@@ -361,6 +345,12 @@ def build_workflow(tasks):
                     "task": t.get("task"),
                     "filename": current_file,
                 }
+            })
+
+        elif intent == "open_app":
+            steps.append({
+                "action": "open_app",
+                "name": t.get("app")
             })
 
         else:
@@ -391,7 +381,7 @@ def handle_single_task(task):
         ])
 
     if intent == "open_app":
-        return {"workflow": [{"action": "skill", "data": task}]}
+        return {"workflow": [{"action": "open_app", "name": task.get("app")}]}
 
     if intent == "create_file":
         return build_workflow([task])
@@ -404,42 +394,39 @@ def handle_single_task(task):
 
 def create_plan(command):
 
+    # -------------------------
     # SMART SKILL
+    # -------------------------
     skill_name, plan = find_best_skill(command)
 
     if plan and len(command.split()) <= 4:
-
         print(f"⚡ Smart skill used: {skill_name}")
-
         if isinstance(plan, dict) and "workflow" in plan:
             return plan
-
         if isinstance(plan, list):
             return {"workflow": plan}
 
-    # MEMORY
+    # -------------------------
+    # PAST EXPERIENCE
+    # -------------------------
     exp = find_similar(command)
 
     if exp and exp.get("success"):
-
         plan = exp.get("plan")
-
         if isinstance(plan, str):
             print("⚠️ Skipping bad cached plan")
-
         else:
             print("⚡ Using past experience")
-
             if isinstance(plan, dict) and "workflow" in plan:
                 return plan
-
             if isinstance(plan, list):
                 return {"workflow": plan}
-
             if isinstance(plan, dict):
                 return {"workflow": [plan]}
 
-    # NORMAL FLOW
+    # -------------------------
+    # NORMAL PARSER FLOW
+    # -------------------------
     parts = split_command(command)
     tasks = []
 
@@ -453,16 +440,46 @@ def create_plan(command):
         return build_workflow(tasks)
 
     if tasks:
-        return handle_single_task(tasks[0])
+        result = handle_single_task(tasks[0])
+        if not _is_unknown(result):
+            return result
 
+    # -------------------------
+    # AI INTERPRETER
+    # -------------------------
     ai_result = interpret_command(command)
-
-    if ai_result:
+    if ai_result and not _is_unknown(ai_result):
         return handle_single_task(ai_result)
 
+    # -------------------------
+    # LLM INTERPRET
+    # -------------------------
     llm_tasks = interpret_with_llm(command)
 
-    if llm_tasks:
-        return build_workflow(llm_tasks)
+    if llm_tasks and not _is_unknown(llm_tasks):
+        # ✅ FIX: filter out any strings before building workflow
+        if isinstance(llm_tasks, list):
+            llm_tasks = [t for t in llm_tasks if isinstance(t, dict)]
+        if llm_tasks:
+            return build_workflow(llm_tasks)
+
+    # -------------------------
+    # STEP 112 — MULTI-HYPOTHESIS PLANNER
+    # -------------------------
+    print("Planner: falling back to PlannerV2 multi-hypothesis")
+    multi = multi_plan(command)
+    if multi:
+        return multi
 
     return [{"intent": "unknown"}]
+
+
+def _is_unknown(result):
+    if isinstance(result, list):
+        return all(
+            isinstance(r, dict) and r.get("intent") == "unknown"
+            for r in result
+        )
+    if isinstance(result, dict):
+        return result.get("intent") == "unknown"
+    return False

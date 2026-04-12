@@ -213,5 +213,531 @@
     },
     "success": true,
     "timestamp": "2026-04-09 14:57:59.418838"
+  },
+  {
+    "command": "search youtube for lofi",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com/results?search_query=for+lofi"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:26:21.032618"
+  },
+  {
+    "command": "search youtube for lofi",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com/results?search_query=for+lofi"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:26:50.471013"
+  },
+  {
+    "command": "search happy on youtube",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com/results?search_query=happy+on"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:27:08.902807"
+  },
+  {
+    "command": "create test5345345.py and write twosum code",
+    "plan": {
+      "workflow": [
+        {
+          "action": "create_file",
+          "path": "test5345345.py"
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "write_code",
+            "task": "twosum code",
+            "filename": "test5345345.py"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:35:20.613907"
+  },
+  {
+    "command": "open youtube and search happy songs",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com/results?search_query=happy+songs"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:35:50.811009"
+  },
+  {
+    "command": "opne notepad and type python hello world code",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "opne notepad"
+          }
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "write_code",
+            "task": "python hello world code",
+            "filename": null
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:36:28.571268"
+  },
+  {
+    "command": "print(\"hello, world!\")",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "print(\"Hello"
+          }
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "World!\")"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:36:38.859993"
+  },
+  {
+    "command": "opne notepad and write python hello world code",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "opne notepad"
+          }
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "write_code",
+            "task": "python hello world code",
+            "filename": null
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:37:20.166588"
+  },
+  {
+    "command": "print(\"hello, world!\")",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "print(\"Hello"
+          }
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "World!\")"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:38:41.607182"
+  },
+  {
+    "command": "opne notepad and type hello world",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "opne notepad"
+          }
+        },
+        {
+          "action": "type",
+          "text": "hello world"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:39:41.372513"
+  },
+  {
+    "command": "opne notepad and type hello world",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "opne notepad"
+          }
+        },
+        {
+          "action": "type",
+          "text": "hello world"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:51:28.945437"
+  },
+  {
+    "command": "hello world open notepad and type hello world",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "hello world open notepad"
+          }
+        },
+        {
+          "action": "type",
+          "text": "hello world"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:51:39.188199"
+  },
+  {
+    "command": "open notepad and type hello world",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "open_app",
+            "app": "notepad",
+            "raw": "open notepad"
+          }
+        },
+        {
+          "action": "type",
+          "text": "hello world"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:51:58.681892"
+  },
+  {
+    "command": "open notepad and write java hello world code",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "open_app",
+            "app": "notepad",
+            "raw": "open notepad"
+          }
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "write_code",
+            "task": "java hello world code",
+            "filename": null
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:52:22.332968"
+  },
+  {
+    "command": "open youtube and search happy songs",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com/results?search_query=happy+songs"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:57:04.718877"
+  },
+  {
+    "command": "open youtube and search lofi songs",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com/results?search_query=lofi+songs"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:57:25.726499"
+  },
+  {
+    "command": "create test5345.py and write twosum code",
+    "plan": {
+      "workflow": [
+        {
+          "action": "create_file",
+          "path": "test5345.py"
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "write_code",
+            "task": "twosum code",
+            "filename": "test5345.py"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:57:45.171760"
+  },
+  {
+    "command": "create test5345.py and write insertion sor t code",
+    "plan": {
+      "workflow": [
+        {
+          "action": "create_file",
+          "path": "test5345.py"
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "write_code",
+            "task": "insertion sor t code",
+            "filename": "test5345.py"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:58:06.019085"
+  },
+  {
+    "command": "open google and search ai tools",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.google.com"
+        },
+        {
+          "action": "open_url",
+          "url": "https://www.google.com/search?q=ai+tools"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:58:43.200734"
+  },
+  {
+    "command": "open google and search leetcode",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.google.com"
+        },
+        {
+          "action": "open_url",
+          "url": "https://www.google.com/search?q=leetcode"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-10 15:59:29.231740"
+  },
+  {
+    "command": "create fury_test.py and write fibonacci code",
+    "plan": {
+      "workflow": [
+        {
+          "action": "create_file",
+          "path": "fury_test.py"
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "write_code",
+            "task": "fibonacci code",
+            "filename": "fury_test.py"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-11 18:51:03.516527"
+  },
+  {
+    "command": "open youtube and search lofi",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com/results?search_query=lofi"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-11 18:53:30.709587"
+  },
+  {
+    "command": "create fury_test1.py and write fibonacci code",
+    "plan": {
+      "workflow": [
+        {
+          "action": "create_file",
+          "path": "fury_test1.py"
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "write_code",
+            "task": "fibonacci code",
+            "filename": "fury_test1.py"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-11 18:59:27.419082"
+  },
+  {
+    "command": "send email arpityadava1704@gmail.com",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://mail.google.com"
+        },
+        {
+          "action": "type",
+          "text": "arpityadava1704@gmail.com"
+        },
+        {
+          "action": "type",
+          "text": "Email content here"
+        },
+        {
+          "action": "press",
+          "key": "Enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-11 19:00:27.154992"
+  },
+  {
+    "command": "open youtube and search lofi songs",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com/results?search_query=lofi+songs"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-11 19:00:57.622734"
+  },
+  {
+    "command": "open youtube and search lofi",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com/results?search_query=lofi"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-13 01:58:37.090338"
+  },
+  {
+    "command": "create test_final2.py and write quicksort code",
+    "plan": {
+      "workflow": [
+        {
+          "action": "create_file",
+          "path": "test_final2.py"
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "write_code",
+            "task": "quicksort code",
+            "filename": "test_final2.py"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-13 01:59:06.251354"
   }
 ]
