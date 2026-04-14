@@ -1,0 +1,136 @@
+# Fury Personal Profile
+# This file contains YOUR information.
+# Fury reads this before any job application, email, or form filling.
+# Update any field as your situation changes.
+
+# -------------------------
+# IDENTITY
+# -------------------------
+identity:
+  name: "Arpit Yadav"
+  email: "arpityadav170402@gmail.com"
+  phone: "+91-9027706195"
+  location: "India"
+  github: "https://github.com/arpit-yadav01"
+  linkedin: ""           # add when you create LinkedIn
+  portfolio: ""          # add your portfolio URL
+
+# -------------------------
+# RESUME
+# -------------------------
+resume:
+  path: ""               # fill in: C:\Users\arpit\Documents\Arpitresume1.pdf
+  summary: "Full-stack developer with experience building scalable web applications using the MERN stack and OpenAI APIs. Skilled in developing responsive React interfaces, integrating APIs, and optimizing application performance."
+
+# -------------------------
+# SKILLS
+# -------------------------
+skills:
+  languages:   ["Java", "JavaScript", "Python", "HTML", "CSS"]
+  frameworks:  ["React.js", "Node.js", "Express.js", "React Native"]
+  databases:   ["MongoDB", "PostgreSQL", "SQL"]
+  technologies: ["MERN Stack", "REST APIs", "Django REST Framework"]
+  tools:       ["Git", "GitHub", "VS Code"]
+
+# -------------------------
+# EXPERIENCE
+# -------------------------
+experience:
+  - role: "Software Developer"
+    company: "Verma ICT & Software Solution (VICTSS)"
+    duration: "Jan 2025 – Present"
+    type: "full-time"
+
+  - role: "Software Development Intern"
+    company: "Aryabhatta Research Institute (ARIES)"
+    duration: "Jul 2024 – Jan 2025"
+    type: "internship"
+
+# -------------------------
+# EDUCATION
+# -------------------------
+education:
+  degree: "B.Tech in Computer Science and Engineering"
+  university: "Graphic Era Hill University, Bhimtal"
+  year: "2024"
+
+# -------------------------
+# JOB PREFERENCES
+# -------------------------
+job_preferences:
+  roles:
+    - "Full Stack Developer"
+    - "MERN Stack Developer"
+    - "React Developer"
+    - "Node.js Developer"
+    - "Frontend Developer"
+    - "Backend Developer"
+    - "Software Developer"
+  stack: "MERN"                  # primary stack
+  type: ["full-time", "internship", "remote", "hybrid"]
+  location_preference: "India"
+  min_experience_match: true     # only apply if experience matches
+  # future stacks — Fury will adapt as you learn new things
+  open_to_new_stacks: true
+
+# -------------------------
+# JOB PLATFORMS
+# -------------------------
+platforms:
+  naukri:
+    url: "https://www.naukri.com"
+    email: "arpityadav170402@gmail.com"
+    logged_in: false             # set true once logged in
+  internshala:
+    url: "https://internshala.com"
+    email: "arpityadav170402@gmail.com"
+    logged_in: false
+  indeed:
+    url: "https://www.indeed.com"
+    email: "arpityadav170402@gmail.com"
+    logged_in: false
+  linkedin:
+    url: "https://www.linkedin.com"
+    email: "arpityadav170402@gmail.com"
+    logged_in: false
+  monster:
+    url: "https://www.monster.com"
+    email: "arpityadav170402@gmail.com"
+    logged_in: false
+  unstop:
+    url: "https://unstop.com"
+    email: "arpityadav170402@gmail.com"
+    logged_in: false
+  wellfound:
+    url: "https://wellfound.com"
+    email: "arpityadav170402@gmail.com"
+    logged_in: false
+
+# -------------------------
+# EMAIL
+# -------------------------
+email:
+  primary: "arpityadav170402@gmail.com"
+  provider: "gmail"              # gmail | outlook
+  signature: "Best regards,\nArpit Yadav\n+91-9027706195"
+
+# -------------------------
+# COVER LETTER TEMPLATE
+# -------------------------
+cover_letter:
+  template: |
+    Dear Hiring Manager,
+
+    I am writing to express my interest in the {role} position at {company}.
+    As a full-stack developer with hands-on experience in the MERN stack,
+    React.js, and Node.js, I am confident in my ability to contribute
+    effectively to your team.
+
+    {custom_paragraph}
+
+    I would welcome the opportunity to discuss how my skills align with
+    your requirements.
+
+    Best regards,
+    Arpit Yadav
+    arpityadav170402@gmail.com | +91-9027706195
