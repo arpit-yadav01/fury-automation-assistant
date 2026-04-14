@@ -1,17 +1,6 @@
 # execution/visual_agent.py
 # STEP 131 — Visual Agent Loop
-#
-# The core engine for Phase 10.
-# Operates the PC like a human would:
-#   1. Take screenshot
-#   2. Understand what's on screen (vision_understanding)
-#   3. Decide next action using LLM
-#   4. Execute the action (ui_action_engine)
-#   5. Verify progress was made
-#   6. Repeat until goal is achieved or max steps reached
-#
-# This is what makes LeetCode, WhatsApp, job applications possible.
-# Every Phase 10 agent runs ON TOP of this loop.
+# STEP 132 — Task Memory integrated
 
 import os
 import json
@@ -25,6 +14,12 @@ from openai import OpenAI
 from vision.screen_capture import capture_screen
 from automation.ui_action_engine import perform_ui_action
 from brain.context_memory import memory as ctx
+
+# STEP 132
+from memory.task_memory import (
+    save_task_state, clear_task_state,
+    save_to_history, load_task_state
+)
 
 # -------------------------
 # CLIENT
@@ -42,71 +37,79 @@ if GROQ_KEY:
 # CONSTANTS
 # -------------------------
 
-MAX_STEPS     = 20      # max actions per goal
-MAX_STUCK     = 3       # stop if screen unchanged N times
-STEP_DELAY    = 1.5     # seconds between steps
-VISION_MODEL  = "meta-llama/llama-4-scout-17b-16e-instruct"
+MAX_STEPS    = 20
+MAX_STUCK    = 3
+STEP_DELAY   = 2.0
+VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+
+SCREEN_W = 1920
+SCREEN_H = 1080
+
+# Exact YouTube search bar coordinates (measured at 1920x1080)
+YOUTUBE_SEARCH_X = 588
+YOUTUBE_SEARCH_Y = 145
 
 # -------------------------
 # SYSTEM PROMPT
 # -------------------------
 
-AGENT_PROMPT = """You are Fury, an autonomous AI agent controlling a Windows PC.
-You can see the current screen. Your job is to achieve the given goal step by step.
+AGENT_PROMPT = f"""You are Fury, an autonomous AI agent on Windows at {SCREEN_W}x{SCREEN_H}.
+Achieve the goal step by step.
 
-Given:
-- goal: what you need to accomplish
-- current_screen: description of what's on screen right now
-- steps_taken: list of actions already performed
-- step_number: which step you're on
+COORDINATES:
+- YouTube search bar: x={YOUTUBE_SEARCH_X}, y={YOUTUBE_SEARCH_Y}
+- YouTube first video result: ~x=400, y=300
+- YouTube second video: ~x=400, y=500
 
-Decide the SINGLE NEXT ACTION to take.
+RULES:
+1. Use open_url with direct search URL when possible — faster than clicking search bar
+   e.g. https://www.youtube.com/results?search_query=lofi+music
+2. After search results load, click a video thumbnail to play it
+3. wait (time=3) after every open_url
+4. Never repeat a failed action — try different approach
+5. Set done=true when goal is achieved
 
-Return ONLY a JSON object. No explanation. No markdown. No backticks.
+Return ONLY JSON. No markdown.
 
-Format:
-{
-  "action": "<action type>",
-  "reasoning": "<why this action>",
+{{
+  "action": "<type>",
+  "reasoning": "<one sentence>",
   "done": false,
   "failed": false,
   "failure_reason": null
-}
+}}
 
-Action types and their fields:
-- open_url:    {"action": "open_url", "url": "https://..."}
-- click:       {"action": "click", "x": 100, "y": 200}
-- type:        {"action": "type", "text": "text to type"}
-- press:       {"action": "press", "key": "enter"}
-- wait:        {"action": "wait", "time": 2}
-- scroll:      {"action": "scroll", "direction": "down", "amount": 3}
-- hotkey:      {"action": "hotkey", "keys": ["ctrl", "a"]}
-- done:        {"action": "done"} — use when goal is achieved
-- failed:      {"action": "failed", "reason": "why"} — use if impossible
-
-Rules:
-- Always take the simplest action that moves toward the goal
-- Use open_url to navigate to websites
-- Use click with coordinates to click buttons or links
-- Use type to enter text into fields
-- Use press "enter" to submit forms
-- Use wait when page needs to load
-- Set done=true when the goal is fully achieved
-- Set failed=true only if the goal is truly impossible
-- Never repeat the same failed action more than once
-- If stuck, try a different approach
+Actions:
+- {{"action": "open_url", "url": "https://..."}}
+- {{"action": "click", "x": {YOUTUBE_SEARCH_X}, "y": {YOUTUBE_SEARCH_Y}}}
+- {{"action": "type", "text": "..."}}
+- {{"action": "press", "key": "enter"}}
+- {{"action": "wait", "time": 3}}
+- {{"action": "scroll", "direction": "down", "amount": 3}}
+- {{"action": "done"}}
+- {{"action": "failed", "reason": "why"}}
 """
+
+# -------------------------
+# BROWSER FOCUS
+# -------------------------
+
+def _ensure_browser_focused(browser="chrome"):
+    from automation.window_manager import force_focus_window, is_window_focused
+    if is_window_focused(browser):
+        return True
+    print(f"Refocusing {browser}...")
+    success = force_focus_window(browser, timeout=3)
+    if success:
+        time.sleep(0.5)
+    return success
 
 
 # -------------------------
-# MAIN LOOP
+# VISUAL AGENT
 # -------------------------
 
 class VisualAgent:
-    """
-    The core visual agent loop.
-    Give it a goal, it operates the PC until done.
-    """
 
     def __init__(self):
         self.steps_taken = []
@@ -114,58 +117,77 @@ class VisualAgent:
         self.start_time = None
         self.last_screen_hash = None
         self.stuck_count = 0
+        self.browser_mode = False
+        self.resume_from = 0
 
-    def run(self, goal, max_steps=MAX_STEPS, context=None):
+    def run(self, goal, max_steps=MAX_STEPS, context=None, resume=False):
         """
-        Run the visual agent loop to achieve a goal.
+        Run visual agent to achieve goal.
 
         Args:
-            goal: plain English goal e.g. "solve LeetCode problem 1"
-            max_steps: maximum actions before giving up
-            context: optional dict with extra context (account, url, etc.)
-
-        Returns:
-            dict with outcome, steps_taken, duration_ms
+            goal: plain English goal
+            max_steps: max steps before giving up
+            context: optional extra context
+            resume: if True, tries to resume from saved state
         """
+        # STEP 132 — check for resume
+        if resume:
+            saved = load_task_state()
+            if saved and saved.get("goal") == goal:
+                print(f"📂 Resuming from step {saved['step_num']}")
+                self.steps_taken = saved.get("steps_taken", [])
+                self.resume_from = saved.get("step_num", 0)
+            else:
+                resume = False
+
         self.goal = goal
-        self.steps_taken = []
+        if not resume:
+            self.steps_taken = []
+            self.resume_from = 0
         self.start_time = time.time()
         self.stuck_count = 0
         self.last_screen_hash = None
+        self.browser_mode = False
 
         print(f"\n{'='*50}")
-        print(f"🤖 Visual Agent starting")
+        print(f"🤖 Visual Agent {'(resuming)' if resume else 'starting'}")
         print(f"   Goal: {goal}")
         print(f"{'='*50}\n")
 
-        for step_num in range(1, max_steps + 1):
+        # STEP 132 — save initial state
+        save_task_state(goal, self.steps_taken, 0, "running", context)
+
+        for step_num in range(self.resume_from + 1, max_steps + 1):
 
             print(f"\n--- Step {step_num}/{max_steps} ---")
 
-            # 1. capture screen
+            if self.browser_mode:
+                _ensure_browser_focused()
+                time.sleep(0.3)
+
             screen_img = capture_screen()
             if screen_img is None:
-                print("No screen captured, retrying...")
                 time.sleep(1)
                 continue
 
-            # 2. check if stuck (screen not changing)
             screen_hash = self._hash_screen(screen_img)
             if screen_hash == self.last_screen_hash:
                 self.stuck_count += 1
                 print(f"Screen unchanged ({self.stuck_count}/{MAX_STUCK})")
                 if self.stuck_count >= MAX_STUCK:
-                    print("Agent stuck — stopping")
-                    return self._result("stuck")
+                    if self.browser_mode:
+                        _ensure_browser_focused()
+                        time.sleep(1)
+                        self.stuck_count = 0
+                        continue
+                    return self._finish("stuck", context)
             else:
                 self.stuck_count = 0
                 self.last_screen_hash = screen_hash
 
-            # 3. understand screen
             screen_desc = self._understand_screen(screen_img)
             print(f"Screen: {screen_desc}")
 
-            # 4. decide next action
             action = self._decide_action(
                 goal=goal,
                 screen_desc=screen_desc,
@@ -175,47 +197,101 @@ class VisualAgent:
             )
 
             if action is None:
-                print("Could not decide action")
+                time.sleep(2)
                 continue
 
-            print(f"Action: {action}")
-            print(f"Reason: {action.get('reasoning', '?')}")
+            print(f"Action: {action.get('action')} | {action.get('reasoning','')}")
 
-            # 5. check if done or failed
             if action.get("action") == "done" or action.get("done"):
-                print(f"\n✅ Goal achieved: {goal}")
+                print(f"\n✅ Goal achieved!")
                 self._record_step(action, screen_desc, success=True)
-                return self._result("success")
+                # STEP 132 — save success state
+                save_task_state(goal, self.steps_taken, step_num, "success", context)
+                clear_task_state()
+                return self._finish("success", context)
 
             if action.get("action") == "failed" or action.get("failed"):
                 reason = action.get("failure_reason") or action.get("reason", "unknown")
-                print(f"\n❌ Agent failed: {reason}")
-                return self._result("failed", reason)
+                print(f"\n❌ Failed: {reason}")
+                return self._finish("failed", context, reason)
 
-            # 6. execute action
-            success = self._execute(action)
+            success = self._execute_smart(action)
             self._record_step(action, screen_desc, success=success)
 
-            if not success:
-                print(f"Action failed, continuing...")
+            # STEP 132 — save state after every step
+            save_task_state(goal, self.steps_taken, step_num, "running", context)
 
-            # 7. wait for screen to update
+            if action.get("action") == "open_url":
+                self.browser_mode = True
+                print("Waiting for page load...")
+                time.sleep(3)
+                _ensure_browser_focused()
+
             time.sleep(STEP_DELAY)
 
-        print(f"\n⏰ Max steps reached ({max_steps})")
-        return self._result("max_steps")
+        return self._finish("max_steps", context)
+
+    # -------------------------
+    # SMART EXECUTE
+    # -------------------------
+
+    def _execute_smart(self, action):
+        act = action.get("action")
+
+        if act == "click":
+            try:
+                import pyautogui
+                x = action.get("x", YOUTUBE_SEARCH_X)
+                y = action.get("y", YOUTUBE_SEARCH_Y)
+                _ensure_browser_focused()
+                time.sleep(0.2)
+                pyautogui.click(x, y)
+                print(f"Clicked ({x}, {y})")
+                return True
+            except Exception as e:
+                print(f"Click error: {e}")
+                return False
+
+        if act == "type":
+            try:
+                import pyautogui
+                text = action.get("text", "")
+                pyautogui.write(text, interval=0.05)
+                print(f"Typed: {text}")
+                return True
+            except Exception as e:
+                print(f"Type error: {e}")
+                return False
+
+        if act == "scroll":
+            import pyautogui
+            direction = action.get("direction", "down")
+            amount = action.get("amount", 3)
+            pyautogui.scroll(amount if direction == "down" else -amount)
+            return True
+
+        if act == "hotkey":
+            import pyautogui
+            keys = action.get("keys", [])
+            if keys:
+                pyautogui.hotkey(*keys)
+            return True
+
+        try:
+            return perform_ui_action(action)
+        except Exception as e:
+            print(f"Execute error: {e}")
+            return False
 
     # -------------------------
     # SCREEN UNDERSTANDING
     # -------------------------
 
     def _understand_screen(self, img):
-        """Get a plain English description of what's on screen."""
         try:
             b64 = self._encode_image(img)
             if not b64 or client is None:
                 return self._ocr_describe(img)
-
             response = client.chat.completions.create(
                 model=VISION_MODEL,
                 messages=[{
@@ -224,9 +300,9 @@ class VisualAgent:
                         {
                             "type": "text",
                             "text": (
-                                "Describe this Windows screen in 1-2 sentences. "
-                                "Include: what app is open, what's visible, "
-                                "any input fields or buttons. Be specific and brief."
+                                "Describe this screen in 1-2 sentences. "
+                                "What app? What's visible? Buttons, search bars, videos? "
+                                "Include pixel coordinates of key elements."
                             )
                         },
                         {
@@ -236,11 +312,10 @@ class VisualAgent:
                     ]
                 }],
                 temperature=0.1,
-                max_tokens=150
+                max_tokens=200
             )
             return response.choices[0].message.content.strip()
         except Exception as e:
-            print(f"Screen understanding error: {e}")
             return self._ocr_describe(img)
 
     # -------------------------
@@ -248,33 +323,26 @@ class VisualAgent:
     # -------------------------
 
     def _decide_action(self, goal, screen_desc, screen_img, step_num, context=None):
-        """Use LLM + vision to decide the next action."""
         if client is None:
             return None
-
         try:
             b64 = self._encode_image(screen_img)
-
-            context_str = json.dumps(context) if context else "none"
             steps_summary = [
-                f"Step {i+1}: {s['action'].get('action','?')} — {s['screen'][:50]}"
-                for i, s in enumerate(self.steps_taken[-5:])  # last 5 steps
+                f"{s['action'].get('action','?')}:{'ok' if s['success'] else 'fail'}"
+                for s in self.steps_taken[-5:]
             ]
 
-            user_content = [
-                {
-                    "type": "text",
-                    "text": json.dumps({
-                        "goal": goal,
-                        "current_screen": screen_desc,
-                        "step_number": step_num,
-                        "steps_taken": steps_summary,
-                        "extra_context": context_str
-                    })
-                }
-            ]
+            user_content = [{
+                "type": "text",
+                "text": json.dumps({
+                    "goal": goal,
+                    "screen": screen_desc,
+                    "step": step_num,
+                    "history": steps_summary,
+                    "context": context or {}
+                })
+            }]
 
-            # add screenshot if available
             if b64:
                 user_content.append({
                     "type": "image_url",
@@ -292,63 +360,33 @@ class VisualAgent:
             )
 
             raw = response.choices[0].message.content.strip()
-            raw = re.sub(r"```json", "", raw)
-            raw = re.sub(r"```", "", raw)
-
-            action = json.loads(raw)
-            return action
+            raw = re.sub(r"```json|```", "", raw)
+            return json.loads(raw)
 
         except Exception as e:
             print(f"Decision error: {e}")
             return None
 
     # -------------------------
-    # ACTION EXECUTION
+    # FINISH + HISTORY
     # -------------------------
 
-    def _execute(self, action):
-        """Execute an action using ui_action_engine."""
-        try:
-            act = action.get("action")
-
-            # handle scroll separately
-            if act == "scroll":
-                import pyautogui
-                direction = action.get("direction", "down")
-                amount = action.get("amount", 3)
-                clicks = amount if direction == "down" else -amount
-                pyautogui.scroll(clicks)
-                return True
-
-            # handle hotkey separately
-            if act == "hotkey":
-                import pyautogui
-                keys = action.get("keys", [])
-                if keys:
-                    pyautogui.hotkey(*keys)
-                return True
-
-            # delegate everything else to existing ui_action_engine
-            return perform_ui_action(action)
-
-        except Exception as e:
-            print(f"Execute error: {e}")
-            return False
-
-    # -------------------------
-    # HELPERS
-    # -------------------------
-
-    def _record_step(self, action, screen_desc, success=True):
-        self.steps_taken.append({
-            "action": action,
-            "screen": screen_desc,
-            "success": success,
-            "timestamp": str(datetime.now())
-        })
-
-    def _result(self, outcome, reason=None):
+    def _finish(self, outcome, context=None, reason=None):
         duration_ms = int((time.time() - self.start_time) * 1000)
+
+        # STEP 132 — save to history
+        save_to_history(
+            goal=self.goal,
+            outcome=outcome,
+            steps=len(self.steps_taken),
+            duration_ms=duration_ms,
+            context=context
+        )
+
+        # clear running state if done
+        if outcome in ("success", "failed"):
+            clear_task_state()
+
         result = {
             "goal": self.goal,
             "outcome": outcome,
@@ -357,19 +395,29 @@ class VisualAgent:
             "duration_ms": duration_ms,
             "reason": reason
         }
-        self._print_summary(result)
+
+        print(f"\n{'='*50}")
+        print(f"🤖 Visual Agent — {outcome.upper()}")
+        print(f"   Goal  : {self.goal}")
+        print(f"   Steps : {len(self.steps_taken)}")
+        print(f"   Time  : {duration_ms}ms")
+        if reason:
+            print(f"   Why   : {reason}")
+        print(f"{'='*50}\n")
+
         return result
 
-    def _print_summary(self, result):
-        print(f"\n{'='*50}")
-        print(f"🤖 Visual Agent finished")
-        print(f"   Goal    : {result['goal']}")
-        print(f"   Outcome : {result['outcome']}")
-        print(f"   Steps   : {result['steps']}")
-        print(f"   Time    : {result['duration_ms']}ms")
-        if result.get('reason'):
-            print(f"   Reason  : {result['reason']}")
-        print(f"{'='*50}\n")
+    # -------------------------
+    # HELPERS
+    # -------------------------
+
+    def _record_step(self, action, screen_desc, success=True):
+        self.steps_taken.append({
+            "action": action,
+            "screen": screen_desc[:100],
+            "success": success,
+            "timestamp": str(datetime.now())
+        })
 
     def _encode_image(self, img):
         try:
@@ -383,7 +431,6 @@ class VisualAgent:
             return None
 
     def _hash_screen(self, img):
-        """Simple hash to detect if screen changed."""
         try:
             small = cv2.resize(img, (32, 32))
             gray = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY)
@@ -392,7 +439,6 @@ class VisualAgent:
             return None
 
     def _ocr_describe(self, img):
-        """Fallback description using pytesseract."""
         try:
             import pytesseract
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -404,26 +450,30 @@ class VisualAgent:
 
 
 # -------------------------
-# GLOBAL INSTANCE
+# ENTRY POINTS
 # -------------------------
 
-visual_agent = VisualAgent()
-
-
-# -------------------------
-# CONVENIENCE FUNCTION
-# -------------------------
-
-def run_visual_goal(goal, context=None, max_steps=MAX_STEPS):
+def run_visual_goal(goal, context=None, max_steps=MAX_STEPS, resume=False):
     """
-    Run the visual agent to achieve a goal.
-    This is the main entry point for all Phase 10 agents.
+    Main entry point for Phase 10 agents.
 
-    Usage:
-        from execution.visual_agent import run_visual_goal
-        result = run_visual_goal("solve LeetCode problem 1")
-        result = run_visual_goal("send WhatsApp message to John: hello")
-        result = run_visual_goal("play lofi music on YouTube")
+    Examples:
+        run_visual_goal("play lofi music on youtube")
+        run_visual_goal("solve leetcode two sum", resume=True)
+        run_visual_goal("send whatsapp to John: hello")
     """
     agent = VisualAgent()
-    return agent.run(goal, max_steps=max_steps, context=context)
+    return agent.run(goal, max_steps=max_steps, context=context, resume=resume)
+
+
+def resume_last_task():
+    """Resume the last interrupted visual task."""
+    from memory.task_memory import load_task_state
+    state = load_task_state()
+    if not state:
+        print("No interrupted task found.")
+        return None
+    goal = state.get("goal")
+    context = state.get("context")
+    print(f"Resuming: {goal}")
+    return run_visual_goal(goal, context=context, resume=True)
