@@ -1,6 +1,8 @@
 # execution/visual_agent.py
 # STEP 131 — Visual Agent Loop
-# STEP 132 — Task Memory integrated
+# STEP 132 — Task Memory
+# STEP 134 — Tab Intelligence
+# STEP 135 — Personal Profile context
 
 import os
 import json
@@ -14,16 +16,10 @@ from openai import OpenAI
 from vision.screen_capture import capture_screen
 from automation.ui_action_engine import perform_ui_action
 from brain.context_memory import memory as ctx
-
-# STEP 132
 from memory.task_memory import (
     save_task_state, clear_task_state,
     save_to_history, load_task_state
 )
-
-# -------------------------
-# CLIENT
-# -------------------------
 
 GROQ_KEY = os.getenv("GROQ_API_KEY")
 client = None
@@ -33,10 +29,6 @@ if GROQ_KEY:
         base_url="https://api.groq.com/openai/v1"
     )
 
-# -------------------------
-# CONSTANTS
-# -------------------------
-
 MAX_STEPS    = 20
 MAX_STUCK    = 3
 STEP_DELAY   = 2.0
@@ -44,29 +36,55 @@ VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
 SCREEN_W = 1920
 SCREEN_H = 1080
-
-# Exact YouTube search bar coordinates (measured at 1920x1080)
 YOUTUBE_SEARCH_X = 588
 YOUTUBE_SEARCH_Y = 145
 
 # -------------------------
-# SYSTEM PROMPT
+# KNOWN PLATFORMS
 # -------------------------
 
-AGENT_PROMPT = f"""You are Fury, an autonomous AI agent on Windows at {SCREEN_W}x{SCREEN_H}.
+PLATFORM_KEYWORDS = {
+    "leetcode":    "leetcode.com",
+    "naukri":      "naukri.com",
+    "indeed":      "indeed.com",
+    "internshala": "internshala.com",
+    "linkedin":    "linkedin.com",
+    "gmail":       "mail.google.com",
+    "whatsapp":    "web.whatsapp.com",
+    "telegram":    "web.telegram.org",
+    "youtube":     "youtube.com",
+    "github":      "github.com",
+}
+
+
+def _detect_platform(goal):
+    """Detect which platform a goal targets."""
+    goal_lower = goal.lower()
+    for platform, url in PLATFORM_KEYWORDS.items():
+        if platform in goal_lower or url in goal_lower:
+            return platform
+    return None
+
+
+# -------------------------
+# SYSTEM PROMPT BUILDER
+# Includes personal context when relevant
+# -------------------------
+
+def _build_prompt(context=None):
+    base = f"""You are Fury, an autonomous AI agent on Windows at {SCREEN_W}x{SCREEN_H}.
 Achieve the goal step by step.
 
-COORDINATES:
+SCREEN COORDINATES:
 - YouTube search bar: x={YOUTUBE_SEARCH_X}, y={YOUTUBE_SEARCH_Y}
-- YouTube first video result: ~x=400, y=300
-- YouTube second video: ~x=400, y=500
+- General search bar (top center): x=960, y=55
+- First result: ~x=400, y=300
 
 RULES:
-1. Use open_url with direct search URL when possible — faster than clicking search bar
-   e.g. https://www.youtube.com/results?search_query=lofi+music
-2. After search results load, click a video thumbnail to play it
-3. wait (time=3) after every open_url
-4. Never repeat a failed action — try different approach
+1. Use open_url with direct search URL when faster
+2. wait (time=3) after every open_url
+3. Click elements before typing into them
+4. Never repeat failed action — try differently
 5. Set done=true when goal is achieved
 
 Return ONLY JSON. No markdown.
@@ -81,7 +99,7 @@ Return ONLY JSON. No markdown.
 
 Actions:
 - {{"action": "open_url", "url": "https://..."}}
-- {{"action": "click", "x": {YOUTUBE_SEARCH_X}, "y": {YOUTUBE_SEARCH_Y}}}
+- {{"action": "click", "x": 960, "y": 55}}
 - {{"action": "type", "text": "..."}}
 - {{"action": "press", "key": "enter"}}
 - {{"action": "wait", "time": 3}}
@@ -89,6 +107,26 @@ Actions:
 - {{"action": "done"}}
 - {{"action": "failed", "reason": "why"}}
 """
+
+    # add personal context if available
+    if context:
+        ctx_lines = []
+        if context.get("name"):
+            ctx_lines.append(f"User's name: {context['name']}")
+        if context.get("email"):
+            ctx_lines.append(f"User's email: {context['email']}")
+        if context.get("phone"):
+            ctx_lines.append(f"User's phone: {context['phone']}")
+        if context.get("role"):
+            ctx_lines.append(f"Applying for: {context['role']}")
+        if context.get("skills_summary"):
+            ctx_lines.append(f"Skills: {context['skills_summary']}")
+        if ctx_lines:
+            base += "\nUSER CONTEXT (use this to fill forms):\n"
+            base += "\n".join(ctx_lines)
+
+    return base
+
 
 # -------------------------
 # BROWSER FOCUS
@@ -121,16 +159,33 @@ class VisualAgent:
         self.resume_from = 0
 
     def run(self, goal, max_steps=MAX_STEPS, context=None, resume=False):
-        """
-        Run visual agent to achieve goal.
 
-        Args:
-            goal: plain English goal
-            max_steps: max steps before giving up
-            context: optional extra context
-            resume: if True, tries to resume from saved state
-        """
-        # STEP 132 — check for resume
+        # STEP 134 — detect platform and navigate there first
+        platform = _detect_platform(goal)
+        if platform:
+            try:
+                from brain.tab_intelligence import navigate_to_platform
+                navigate_to_platform(platform)
+                time.sleep(1)
+                self.browser_mode = True
+            except Exception as e:
+                print(f"Tab navigation error: {e}")
+
+        # STEP 135 — enrich context with personal profile
+        if context is None:
+            context = {}
+        try:
+            from brain.personal_profile import profile
+            form_ctx = profile.get_form_context(
+                platform=platform,
+                role=context.get("role"),
+                company=context.get("company")
+            )
+            context = {**form_ctx, **context}
+        except Exception as e:
+            print(f"Profile load error: {e}")
+
+        # STEP 132 — resume handling
         if resume:
             saved = load_task_state()
             if saved and saved.get("goal") == goal:
@@ -147,14 +202,15 @@ class VisualAgent:
         self.start_time = time.time()
         self.stuck_count = 0
         self.last_screen_hash = None
-        self.browser_mode = False
+
+        prompt = _build_prompt(context)
 
         print(f"\n{'='*50}")
         print(f"🤖 Visual Agent {'(resuming)' if resume else 'starting'}")
-        print(f"   Goal: {goal}")
+        print(f"   Goal    : {goal}")
+        print(f"   Platform: {platform or 'general'}")
         print(f"{'='*50}\n")
 
-        # STEP 132 — save initial state
         save_task_state(goal, self.steps_taken, 0, "running", context)
 
         for step_num in range(self.resume_from + 1, max_steps + 1):
@@ -193,7 +249,8 @@ class VisualAgent:
                 screen_desc=screen_desc,
                 screen_img=screen_img,
                 step_num=step_num,
-                context=context
+                context=context,
+                prompt=prompt
             )
 
             if action is None:
@@ -205,7 +262,6 @@ class VisualAgent:
             if action.get("action") == "done" or action.get("done"):
                 print(f"\n✅ Goal achieved!")
                 self._record_step(action, screen_desc, success=True)
-                # STEP 132 — save success state
                 save_task_state(goal, self.steps_taken, step_num, "success", context)
                 clear_task_state()
                 return self._finish("success", context)
@@ -217,8 +273,6 @@ class VisualAgent:
 
             success = self._execute_smart(action)
             self._record_step(action, screen_desc, success=success)
-
-            # STEP 132 — save state after every step
             save_task_state(goal, self.steps_taken, step_num, "running", context)
 
             if action.get("action") == "open_url":
@@ -230,10 +284,6 @@ class VisualAgent:
             time.sleep(STEP_DELAY)
 
         return self._finish("max_steps", context)
-
-    # -------------------------
-    # SMART EXECUTE
-    # -------------------------
 
     def _execute_smart(self, action):
         act = action.get("action")
@@ -283,10 +333,6 @@ class VisualAgent:
             print(f"Execute error: {e}")
             return False
 
-    # -------------------------
-    # SCREEN UNDERSTANDING
-    # -------------------------
-
     def _understand_screen(self, img):
         try:
             b64 = self._encode_image(img)
@@ -301,7 +347,7 @@ class VisualAgent:
                             "type": "text",
                             "text": (
                                 "Describe this screen in 1-2 sentences. "
-                                "What app? What's visible? Buttons, search bars, videos? "
+                                "What app? What's visible? Buttons, forms, input fields? "
                                 "Include pixel coordinates of key elements."
                             )
                         },
@@ -318,11 +364,7 @@ class VisualAgent:
         except Exception as e:
             return self._ocr_describe(img)
 
-    # -------------------------
-    # ACTION DECISION
-    # -------------------------
-
-    def _decide_action(self, goal, screen_desc, screen_img, step_num, context=None):
+    def _decide_action(self, goal, screen_desc, screen_img, step_num, context=None, prompt=None):
         if client is None:
             return None
         try:
@@ -339,7 +381,9 @@ class VisualAgent:
                     "screen": screen_desc,
                     "step": step_num,
                     "history": steps_summary,
-                    "context": context or {}
+                    "context": {k: v for k, v in (context or {}).items()
+                                if k in ("name","email","phone","role","company",
+                                        "skills_summary","cover_letter")}
                 })
             }]
 
@@ -352,7 +396,7 @@ class VisualAgent:
             response = client.chat.completions.create(
                 model=VISION_MODEL,
                 messages=[
-                    {"role": "system", "content": AGENT_PROMPT},
+                    {"role": "system", "content": prompt or _build_prompt(context)},
                     {"role": "user", "content": user_content}
                 ],
                 temperature=0.2,
@@ -367,14 +411,8 @@ class VisualAgent:
             print(f"Decision error: {e}")
             return None
 
-    # -------------------------
-    # FINISH + HISTORY
-    # -------------------------
-
     def _finish(self, outcome, context=None, reason=None):
         duration_ms = int((time.time() - self.start_time) * 1000)
-
-        # STEP 132 — save to history
         save_to_history(
             goal=self.goal,
             outcome=outcome,
@@ -382,8 +420,6 @@ class VisualAgent:
             duration_ms=duration_ms,
             context=context
         )
-
-        # clear running state if done
         if outcome in ("success", "failed"):
             clear_task_state()
 
@@ -406,10 +442,6 @@ class VisualAgent:
         print(f"{'='*50}\n")
 
         return result
-
-    # -------------------------
-    # HELPERS
-    # -------------------------
 
     def _record_step(self, action, screen_desc, success=True):
         self.steps_taken.append({
@@ -454,20 +486,11 @@ class VisualAgent:
 # -------------------------
 
 def run_visual_goal(goal, context=None, max_steps=MAX_STEPS, resume=False):
-    """
-    Main entry point for Phase 10 agents.
-
-    Examples:
-        run_visual_goal("play lofi music on youtube")
-        run_visual_goal("solve leetcode two sum", resume=True)
-        run_visual_goal("send whatsapp to John: hello")
-    """
     agent = VisualAgent()
     return agent.run(goal, max_steps=max_steps, context=context, resume=resume)
 
 
 def resume_last_task():
-    """Resume the last interrupted visual task."""
     from memory.task_memory import load_task_state
     state = load_task_state()
     if not state:

@@ -739,5 +739,59 @@
     },
     "success": true,
     "timestamp": "2026-04-13 01:59:06.251354"
+  },
+  {
+    "command": "lofi music youtube",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "type",
+          "text": "lofi music"
+        },
+        {
+          "action": "press",
+          "key": "Enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-13 02:33:34.175882"
+  },
+  {
+    "command": "open youtube and play lofi song",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "play lofi song"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-13 02:42:15.606276"
+  },
+  {
+    "command": ">>> visual play lofi music on youtube",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com/results?search_query=>>>+visual+play+lofi+music+on"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-13 12:51:13.456868"
   }
 ]

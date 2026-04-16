@@ -106,5 +106,17 @@
   {
     "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'hello world open notepad'}}",
     "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'play lofi song'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'play lofi song'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'play lofi song'}}",
+    "error": "Skill failed"
   }
 ]
