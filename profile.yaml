@@ -19,7 +19,7 @@ identity:
 # RESUME
 # -------------------------
 resume:
-  path: ""               # fill in: C:\Users\arpit\Documents\Arpitresume1.pdf
+  path: "C:/Users/arpit/Documents/Arpitresume1.pdf"               # fill in: C:\Users\arpit\Documents\Arpitresume1.pdf
   summary: "Full-stack developer with experience building scalable web applications using the MERN stack and OpenAI APIs. Skilled in developing responsive React interfaces, integrating APIs, and optimizing application performance."
 
 # -------------------------
