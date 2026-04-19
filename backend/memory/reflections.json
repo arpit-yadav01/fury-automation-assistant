@@ -88,5 +88,158 @@
     "improvement": "Improve the intent recognition for music-related commands to handle variations in user input.",
     "command": ">>> visual play lofi music on youtube",
     "timestamp": "2026-04-13 12:51:14.353348"
+  },
+  {
+    "verdict": "failure",
+    "what_worked": "The workflow plan was generated with a good quality plan.",
+    "what_failed": "All three skill actions failed to execute properly.",
+    "root_cause": "The skill actions failed due to an unspecified error in the 'skill' action.",
+    "improvement": "Next time, provide more specific tasks for the 'skill' action to improve its execution.",
+    "command": ">>> profile leetcode",
+    "timestamp": "2026-04-16 20:29:15.926087"
+  },
+  {
+    "verdict": "success",
+    "what_worked": "The workflow plan to open the browser tabs was successfully executed",
+    "what_failed": "None of the steps in the current plan failed",
+    "root_cause": "null",
+    "improvement": "null",
+    "command": ">>> tabs browser tabs",
+    "timestamp": "2026-04-16 20:29:58.852706"
+  },
+  {
+    "verdict": "success",
+    "what_worked": "The workflow plan was executed and the main goal of playing lofi music on YouTube was achieved",
+    "what_failed": "None of the steps in the current workflow failed",
+    "root_cause": "null",
+    "improvement": "null",
+    "command": ">>> visual play lofi music on youtube",
+    "timestamp": "2026-04-16 20:30:37.961669"
+  },
+  {
+    "verdict": "success",
+    "what_worked": "The workflow plan was executed and the main goal of opening the LeetCode two sum problem in a Brave tab was achieved",
+    "what_failed": "The skill tasks failed to execute due to repeated skill failures",
+    "root_cause": "The repeated skill failures were likely due to the skill being called multiple times with the same tasks",
+    "improvement": "Next time, ensure the skill is called only once with the necessary tasks to avoid repeated failures",
+    "command": ">>> leetcode two sum leetcode tab in brave",
+    "timestamp": "2026-04-16 20:31:18.086260"
+  },
+  {
+    "verdict": "failure",
+    "what_worked": "The workflow plan was built with 'open_app' and 'type' actions",
+    "what_failed": "The 'skill' action failed to solve the Leetcode two sum problem three times",
+    "root_cause": "The 'skill' action was unable to execute the tasks due to an unspecified error",
+    "improvement": "Next time, try using a more specific action like 'write_code' to solve the Leetcode problem",
+    "command": "solve the current leetcode problem two sum",
+    "timestamp": "2026-04-16 20:32:51.726445"
+  },
+  {
+    "verdict": "failure",
+    "what_worked": "The command to define a function for the twoSum problem was initiated",
+    "what_failed": "The function definition was incomplete and the workflow plan was of poor quality with all unknown skills",
+    "root_cause": "The plan quality was poor due to all unknown skills in the workflow",
+    "improvement": "Next time, provide a more detailed and specific plan with known skills to achieve the goal",
+    "command": "def twoSum(nums, target): num_dict = {}",
+    "timestamp": "2026-04-16 20:32:56.404496"
+  },
+  {
+    "verdict": "failure",
+    "what_worked": "The command was executed but no meaningful outcome was achieved",
+    "what_failed": "All skills in the workflow failed to execute",
+    "root_cause": "The plan consisted of unknown skills which were unable to complete the task",
+    "improvement": "Define specific skills for the workflow to achieve the desired outcome",
+    "command": "for i, num in enumerate(nums): if target - num in num_dict:",
+    "timestamp": "2026-04-16 20:33:00.194423"
+  },
+  {
+    "verdict": "failure",
+    "what_worked": "The initial setup for the two sum problem was correctly defined with a function and an empty dictionary.",
+    "what_failed": "The execution of the workflow failed due to unknown skills and actions.",
+    "root_cause": "The plan consisted of unknown skills, leading to repeated failures.",
+    "improvement": "Define specific skills and actions for the workflow to achieve the main goal of solving the two sum problem.",
+    "command": "return [num_dict[target - num], i] num_dict[num] = i",
+    "timestamp": "2026-04-16 20:33:04.924340"
+  },
+  {
+    "verdict": "failure",
+    "what_worked": "The workflow plan was built with a good quality plan",
+    "what_failed": "The skill actions failed due to unknown intent",
+    "root_cause": "The intent of the command was not recognized by the skill",
+    "improvement": "Improve intent recognition to handle unknown commands",
+    "command": ">>>>check whatsapp rishu",
+    "timestamp": "2026-04-16 20:34:18.666272"
+  },
+  {
+    "verdict": "partial",
+    "what_worked": "The workflow plan was executed and the whatsapp application was opened",
+    "what_failed": "The skill actions failed due to unknown intent",
+    "root_cause": "The unknown intent in the skill actions caused the failures",
+    "improvement": "Define the intent for the skill actions to prevent unknown intent errors",
+    "command": ">>> check whatsapp >>> whatsapp rishu  hello from Fury",
+    "timestamp": "2026-04-16 20:34:52.834316"
+  },
+  {
+    "verdict": "failure",
+    "what_worked": "The workflow plan was built and the 'open_app' and 'press' actions were initiated",
+    "what_failed": "The 'skill' actions failed due to unknown intent",
+    "root_cause": "The 'skill' actions were unable to process the given raw data",
+    "improvement": "Improve the intent recognition in the 'skill' actions to handle unknown inputs",
+    "command": "splendor voice mode",
+    "timestamp": "2026-04-16 23:49:02.465611"
+  },
+  {
+    "verdict": "success",
+    "what_worked": "The workflow plan was executed and the main goal of opening YouTube and searching for lofi was achieved",
+    "what_failed": "Some skill actions failed due to unknown intent",
+    "root_cause": "The failed skills had unknown intent which caused the failure",
+    "improvement": "Improve intent recognition for skill actions to handle unknown intents",
+    "command": "open youtube and search lofi",
+    "timestamp": "2026-04-16 23:49:24.447088"
+  },
+  {
+    "verdict": "failure",
+    "what_worked": "The command to say hi to lucky on whatsapp was understood and a plan was built",
+    "what_failed": "The plan failed due to multiple skill failures with unknown intent",
+    "root_cause": "The skill failures were caused by unknown intent in the raw data",
+    "improvement": "Improve intent recognition to handle unknown or ambiguous inputs",
+    "command": "say hii to lucky on whatsapp",
+    "timestamp": "2026-04-18 17:10:55.118204"
+  },
+  {
+    "verdict": "failure",
+    "what_worked": "The command to say hi to lucky on whatsapp was received and a plan was built",
+    "what_failed": "The plan failed to execute due to multiple skill failures with unknown intent",
+    "root_cause": "The skill failed to understand the intent behind the command",
+    "improvement": "Improve the natural language processing to better understand the intent behind the command",
+    "command": "say hii to lucky on whatsapp",
+    "timestamp": "2026-04-18 21:53:22.038539"
+  },
+  {
+    "verdict": "failure",
+    "what_worked": "The command was received and a plan was built",
+    "what_failed": "All steps in the plan failed due to unknown skills",
+    "root_cause": "The plan consisted of unknown skills which led to the failure",
+    "improvement": "Define a specific skill for checking WhatsApp and sending messages to improve the plan quality",
+    "command": "check whatsapp and hi to rishu",
+    "timestamp": "2026-04-18 21:53:33.526360"
+  },
+  {
+    "verdict": "failure",
+    "what_worked": "None of the steps in the plan were successfully executed",
+    "what_failed": "All attempts to send a message to Rishu on WhatsApp failed",
+    "root_cause": "The plan consisted of unknown skills which failed to execute",
+    "improvement": "Define a specific skill for sending messages on WhatsApp to improve the plan",
+    "command": "check whatsapp and send hi to rishu",
+    "timestamp": "2026-04-18 21:53:57.348052"
+  },
+  {
+    "verdict": "failure",
+    "what_worked": "None of the recent commands were successfully executed",
+    "what_failed": "The skill failed to execute the intent due to unknown reasons",
+    "root_cause": "The workflow plan was empty, leading to a lack of execution",
+    "improvement": "Define a valid workflow plan to achieve the desired goal",
+    "command": "say hii to lucky",
+    "timestamp": "2026-04-18 21:54:36.662373"
   }
 ]

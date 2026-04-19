@@ -118,5 +118,161 @@
   {
     "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'play lofi song'}}",
     "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'name': 'LeetCode', 'url': 'https://leetcode.com', 'description': 'Online platform for coding challenges and interview practice'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'name': 'LeetCode', 'url': 'https://leetcode.com', 'description': 'Online platform for coding challenges and interview practice'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'name': 'LeetCode', 'url': 'https://leetcode.com', 'description': 'Online platform for coding challenges and interview practice'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'features': ['Algorithmic coding challenges', 'Data structures and software design problems', 'Practice coding in various programming languages', 'Mock interviews and problem-solving exercises']}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'features': ['Algorithmic coding challenges', 'Data structures and software design problems', 'Practice coding in various programming languages', 'Mock interviews and problem-solving exercises']}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'features': ['Algorithmic coding challenges', 'Data structures and software design problems', 'Practice coding in various programming languages', 'Mock interviews and problem-solving exercises']}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'tasks': ['Complete daily coding challenges', 'Participate in coding contests', 'Solve problems in specific domains (e.g. arrays, strings, linked lists)', 'Review and practice common interview questions']}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'tasks': ['Complete daily coding challenges', 'Participate in coding contests', 'Solve problems in specific domains (e.g. arrays, strings, linked lists)', 'Review and practice common interview questions']}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'tasks': ['Complete daily coding challenges', 'Participate in coding contests', 'Solve problems in specific domains (e.g. arrays, strings, linked lists)', 'Review and practice common interview questions']}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'def twoSum(nums'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'def twoSum(nums'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'def twoSum(nums'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'target): num_dict = {}'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'target): num_dict = {}'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'target): num_dict = {}'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'for i'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'for i'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'for i'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'num in enumerate(nums): if target - num in num_dict:'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'num in enumerate(nums): if target - num in num_dict:'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'num in enumerate(nums): if target - num in num_dict:'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'return [num_dict[target - num]'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'return [num_dict[target - num]'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'return [num_dict[target - num]'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'i] num_dict[num] = i'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'i] num_dict[num] = i'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'i] num_dict[num] = i'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'check whatsapp'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'check whatsapp'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'check whatsapp'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'hi to rishu'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'hi to rishu'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'hi to rishu'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'check whatsapp'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'check whatsapp'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'check whatsapp'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'send hi to rishu'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'send hi to rishu'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'send hi to rishu'}}",
+    "error": "Skill failed"
   }
 ]

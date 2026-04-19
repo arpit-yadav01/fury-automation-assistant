@@ -793,5 +793,345 @@
     },
     "success": true,
     "timestamp": "2026-04-13 12:51:13.456868"
+  },
+  {
+    "command": ">>> profile leetcode",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "name": "LeetCode",
+            "url": "https://leetcode.com",
+            "description": "Online platform for coding challenges and interview practice"
+          }
+        },
+        {
+          "action": "skill",
+          "data": {
+            "features": [
+              "Algorithmic coding challenges",
+              "Data structures and software design problems",
+              "Practice coding in various programming languages",
+              "Mock interviews and problem-solving exercises"
+            ]
+          }
+        },
+        {
+          "action": "skill",
+          "data": {
+            "tasks": [
+              "Complete daily coding challenges",
+              "Participate in coding contests",
+              "Solve problems in specific domains (e.g. arrays, strings, linked lists)",
+              "Review and practice common interview questions"
+            ]
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-16 20:29:15.362851"
+  },
+  {
+    "command": ">>> tabs browser tabs",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_app",
+          "name": "chrome"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-16 20:29:58.250047"
+  },
+  {
+    "command": ">>> visual play lofi music on youtube",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com/results?search_query=>>>+visual+play+lofi+music+on"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-16 20:30:37.233344"
+  },
+  {
+    "command": ">>> leetcode two sum leetcode tab in brave",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_app",
+          "name": "Brave"
+        },
+        {
+          "action": "open_url",
+          "url": "https://leetcode.com/problems/two-sum/"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-16 20:31:17.475539"
+  },
+  {
+    "command": "solve the current leetcode problem two sum",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_app",
+          "name": "vscode"
+        },
+        {
+          "action": "type",
+          "text": "def twoSum(nums, target):\n  num_dict = {}\n  for i, num in enumerate(nums):\n    if target - num in num_dict:\n      return [num_dict[target - num], i]\n    num_dict[num] = i\n  return []"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-16 20:32:50.054359"
+  },
+  {
+    "command": "def twosum(nums, target): num_dict = {}",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "def twoSum(nums"
+          }
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "target): num_dict = {}"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-16 20:32:55.448498"
+  },
+  {
+    "command": "for i, num in enumerate(nums): if target - num in num_dict:",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "for i"
+          }
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "num in enumerate(nums): if target - num in num_dict:"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-16 20:32:59.355966"
+  },
+  {
+    "command": "return [num_dict[target - num], i] num_dict[num] = i",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "return [num_dict[target - num]"
+          }
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "i] num_dict[num] = i"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-16 20:33:03.922259"
+  },
+  {
+    "command": ">>>>check whatsapp rishu",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_app",
+          "name": "WhatsApp"
+        },
+        {
+          "action": "type",
+          "text": "Rishu"
+        },
+        {
+          "action": "press",
+          "key": "Enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-16 20:34:18.028815"
+  },
+  {
+    "command": ">>> check whatsapp >>> whatsapp rishu  hello from fury",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_app",
+          "name": "WhatsApp"
+        },
+        {
+          "action": "type",
+          "text": "hello from Fury"
+        },
+        {
+          "action": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-16 20:34:51.679277"
+  },
+  {
+    "command": "splendor voice mode",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_app",
+          "name": "Splendor"
+        },
+        {
+          "action": "press",
+          "key": "Ctrl + Shift + V"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-16 23:49:01.717224"
+  },
+  {
+    "command": "open youtube and search lofi",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com"
+        },
+        {
+          "action": "open_url",
+          "url": "https://www.youtube.com/results?search_query=lofi"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-16 23:49:23.918455"
+  },
+  {
+    "command": "say hii to lucky on whatsapp",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_app",
+          "name": "WhatsApp"
+        },
+        {
+          "action": "type",
+          "text": "hii"
+        },
+        {
+          "action": "type",
+          "text": " "
+        },
+        {
+          "action": "type",
+          "text": "lucky"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-18 17:10:54.485965"
+  },
+  {
+    "command": "say hii to lucky on whatsapp",
+    "plan": {
+      "workflow": [
+        {
+          "action": "open_app",
+          "name": "WhatsApp"
+        },
+        {
+          "action": "type",
+          "text": "hii"
+        },
+        {
+          "action": "type",
+          "text": " "
+        },
+        {
+          "action": "type",
+          "text": "lucky"
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-18 21:53:21.353526"
+  },
+  {
+    "command": "check whatsapp and hi to rishu",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "check whatsapp"
+          }
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "hi to rishu"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-18 21:53:32.978076"
+  },
+  {
+    "command": "check whatsapp and send hi to rishu",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "check whatsapp"
+          }
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "send hi to rishu"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-18 21:53:56.827868"
   }
 ]
