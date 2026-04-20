@@ -676,7 +676,6 @@
 
 
 
-
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -730,7 +729,6 @@ def start_fury():
         if not command:
             continue
 
-        # strip accidental >>> prefix
         while command.startswith(">"):
             command = command.lstrip("> ").strip()
         if not command:
@@ -744,20 +742,17 @@ def start_fury():
             break
 
         if cmd == "voice mode":
-            voice_mode = True
-            jarvis_mode = False
+            voice_mode = True; jarvis_mode = False
             speak("Voice mode activated")
             continue
 
         if cmd == "text mode":
-            voice_mode = False
-            jarvis_mode = False
+            voice_mode = False; jarvis_mode = False
             speak("Text mode")
             continue
 
         if cmd == "jarvis mode":
-            jarvis_mode = True
-            voice_mode = False
+            jarvis_mode = True; voice_mode = False
             speak("Jarvis mode activated")
             while jarvis_mode:
                 text = listen_once()
@@ -788,9 +783,6 @@ def start_fury():
             print(f"Outcome: {result['outcome']} in {result['steps']} steps")
             continue
 
-        # -------------------------
-        # RESUME
-        # -------------------------
         if cmd == "resume":
             from execution.visual_agent import resume_last_task
             from memory.task_memory import get_pending_task_summary
@@ -807,9 +799,6 @@ def start_fury():
             print_history()
             continue
 
-        # -------------------------
-        # DECOMPOSE
-        # -------------------------
         if cmd.startswith("decompose "):
             goal = command[10:].strip()
             from execution.goal_decomposer import decompose_goal, print_plan
@@ -849,82 +838,78 @@ def start_fury():
             continue
 
         # -------------------------
-        # LEETCODE — clean slug via context
+        # LEETCODE
         # -------------------------
         if cmd.startswith("leetcode "):
             problem = command[9:].strip()
-            slug    = problem.lower().strip().replace(" ", "-")
-            url     = f"https://leetcode.com/problems/{slug}/"
-
+            slug = problem.lower().strip().replace(" ", "-")
+            url  = f"https://leetcode.com/problems/{slug}/"
             from execution.visual_agent import run_visual_goal
-            from brain.tab_intelligence import open_new_tab
-            import time
-
             print(f"\n🧩 LeetCode: {problem} → {url}")
-            open_new_tab(url)
-            time.sleep(3)
-
             result = run_visual_goal(
-                f"solve the {problem} leetcode problem",
-                context={
-                    "platform": "leetcode",
-                    "slug": slug,
-                    "url": url,
-                    "problem": problem
-                }
+                f"open leetcode problem {problem}",
+                context={"platform": "leetcode", "slug": slug, "url": url}
             )
             print(f"Outcome: {result['outcome']} in {result['steps']} steps")
             continue
 
         # -------------------------
-        # JOB APPLY
+        # JOB SEARCH — safe, read only
         # -------------------------
-        if cmd.startswith("apply "):
-            details = command[6:].strip()
-            from execution.visual_agent import run_visual_goal
-            from brain.personal_profile import profile
-            ctx = profile.get_form_context()
-            result = run_visual_goal(f"apply to this job: {details}", context=ctx)
-            print(f"Outcome: {result['outcome']} in {result['steps']} steps")
+        if cmd.startswith("search jobs "):
+            # format: search jobs react developer naukri
+            rest  = command[12:].strip()
+            parts = rest.rsplit(" ", 1)
+            known = ["naukri","indeed","internshala","linkedin",
+                     "monster","unstop","wellfound"]
+            if len(parts) == 2 and parts[1].lower() in known:
+                query    = parts[0].strip()
+                platform = parts[1].lower()
+            else:
+                query    = rest
+                platform = "naukri"
+            from platforms.job_search_agent import search_jobs
+            search_jobs(query, platform)
+            continue
+
+        if cmd.startswith("read job "):
+            url = command[9:].strip()
+            from platforms.job_search_agent import read_job_details
+            read_job_details(url)
+            continue
+
+        if cmd.startswith("write cover letter "):
+            # format: write cover letter React Developer TechCorp
+            rest  = command[19:].strip()
+            parts = rest.split(" ", 2)
+            role    = parts[0] if len(parts) > 0 else "Developer"
+            company = parts[1] if len(parts) > 1 else "the company"
+            from platforms.job_search_agent import generate_cover_letter
+            generate_cover_letter(role, company)
+            continue
+
+        if cmd.startswith("draft email "):
+            # format: draft email hr@company.com React Developer TechCorp
+            rest  = command[12:].strip()
+            parts = rest.split(" ", 2)
+            to      = parts[0] if len(parts) > 0 else ""
+            role    = parts[1] if len(parts) > 1 else "Developer"
+            company = parts[2] if len(parts) > 2 else "the company"
+            from platforms.job_search_agent import draft_email
+            draft_email(to, role, company)
             continue
 
         # -------------------------
-        # GMAIL
+        # GMAIL — read + draft only
         # -------------------------
         if cmd in ("check email", "read email", "gmail"):
-            from platforms.gmail_agent import gmail
-            gmail.read_emails()
-            continue
-
-        if cmd == "check unread":
-            from platforms.gmail_agent import gmail
-            gmail.check_unread()
-            continue
-
-        if cmd.startswith("send email to "):
-            rest  = command[14:].strip()
-            parts = rest.split(" subject: ")
-            to    = parts[0].strip()
-            if len(parts) > 1:
-                bp   = parts[1].split(" body: ")
-                subj = bp[0].strip()
-                body = bp[1].strip() if len(bp) > 1 else ""
-            else:
-                subj = "Message from Fury"
-                body = rest
-            from platforms.gmail_agent import gmail
-            gmail.send(to, subj, body)
-            continue
-
-        if cmd.startswith("reply to "):
-            rest   = command[9:].strip()
-            parts  = rest.split(" ", 1)
-            from platforms.gmail_agent import gmail
-            gmail.reply_to_email(parts[0].strip(),
-                                 parts[1].strip() if len(parts) > 1 else "")
+            from execution.visual_agent import run_visual_goal
+            run_visual_goal("open gmail and show inbox",
+                            context={"platform": "gmail"})
             continue
 
         if cmd.startswith("compose email "):
+            # generates draft — you send manually
             rest  = command[14:].strip()
             parts = rest.split(" about ")
             to    = parts[0].replace("to ", "").strip()
@@ -934,22 +919,22 @@ def start_fury():
             continue
 
         # -------------------------
-        # WHATSAPP — visual agent directly
+        # WHATSAPP
         # -------------------------
         if cmd.startswith("whatsapp ") or cmd.startswith("send whatsapp "):
             rest = command.replace("send whatsapp to ", "").replace("whatsapp ", "").strip()
             if ":" in rest:
-                parts   = rest.split(":", 1)
-                contact = parts[0].strip()
-                message = parts[1].strip()
+                contact, message = rest.split(":", 1)
             else:
-                parts   = rest.split(" ", 1)
-                contact = parts[0].strip()
-                message = parts[1].strip() if len(parts) > 1 else ""
+                parts = rest.split(" ", 1)
+                contact = parts[0]
+                message = parts[1] if len(parts) > 1 else ""
+            contact = contact.strip()
+            message = message.strip()
             from execution.visual_agent import run_visual_goal
             print(f"\n💬 WhatsApp → {contact}: {message}")
             run_visual_goal(
-                f"on WhatsApp Web find contact '{contact}' and send message: {message}",
+                f"send whatsapp message to {contact}: {message}",
                 context={"platform": "whatsapp", "contact": contact}
             )
             continue
@@ -958,54 +943,39 @@ def start_fury():
             contact = command[14:].strip()
             from execution.visual_agent import run_visual_goal
             run_visual_goal(
-                f"on WhatsApp Web read recent messages from '{contact}'",
-                context={"platform": "whatsapp"}
+                f"read whatsapp messages from {contact}",
+                context={"platform": "whatsapp", "contact": contact}
             )
             continue
 
-        if cmd in ("whatsapp unread", "check whatsapp"):
+        if cmd in ("check whatsapp", "whatsapp unread"):
             from execution.visual_agent import run_visual_goal
-            run_visual_goal(
-                "on WhatsApp Web list all chats with unread messages",
-                context={"platform": "whatsapp"}
-            )
+            run_visual_goal("check whatsapp unread messages",
+                            context={"platform": "whatsapp"})
             continue
 
         # -------------------------
-        # TELEGRAM — visual agent directly
+        # TELEGRAM
         # -------------------------
         if cmd.startswith("telegram ") or cmd.startswith("send telegram "):
             rest = command.replace("send telegram to ", "").replace("telegram ", "").strip()
             if ":" in rest:
-                parts   = rest.split(":", 1)
-                contact = parts[0].strip()
-                message = parts[1].strip()
+                contact, message = rest.split(":", 1)
             else:
-                parts   = rest.split(" ", 1)
-                contact = parts[0].strip()
-                message = parts[1].strip() if len(parts) > 1 else ""
+                parts = rest.split(" ", 1)
+                contact = parts[0]
+                message = parts[1] if len(parts) > 1 else ""
             from execution.visual_agent import run_visual_goal
             run_visual_goal(
-                f"on Telegram Web find '{contact}' and send: {message}",
-                context={"platform": "telegram", "contact": contact}
+                f"send telegram message to {contact.strip()}: {message.strip()}",
+                context={"platform": "telegram", "contact": contact.strip()}
             )
             continue
 
-        if cmd.startswith("read telegram "):
-            contact = command[14:].strip()
+        if cmd in ("check telegram", "telegram unread"):
             from execution.visual_agent import run_visual_goal
-            run_visual_goal(
-                f"on Telegram Web read messages from '{contact}'",
-                context={"platform": "telegram"}
-            )
-            continue
-
-        if cmd in ("telegram unread", "check telegram"):
-            from execution.visual_agent import run_visual_goal
-            run_visual_goal(
-                "on Telegram Web list chats with unread messages",
-                context={"platform": "telegram"}
-            )
+            run_visual_goal("check telegram unread messages",
+                            context={"platform": "telegram"})
             continue
 
         # -------------------------
@@ -1037,15 +1007,12 @@ def start_fury():
         if cmd == "fury stats":
             final_core.show_stats()
             continue
-
         if cmd == "fury patterns":
             final_core.show_patterns()
             continue
-
         if cmd == "fury failures":
             final_core.show_failures()
             continue
-
         if cmd.startswith("fury knows "):
             final_core.what_do_i_know(cmd.replace("fury knows ", "").strip())
             continue
@@ -1053,36 +1020,40 @@ def start_fury():
         if cmd == "fury help":
             print("""
 === FURY COMMANDS ===
-exit / voice mode / text mode / jarvis mode
+exit / voice mode / text mode
 
 --- VISUAL AGENT ---
 visual <goal>           e.g. visual play lofi on youtube
-resume                  resume last task
-visual history
+resume / visual history
 decompose <goal>
 
---- PLATFORMS ---
+--- LEETCODE ---
 leetcode <problem>      e.g. leetcode two sum
-apply <job/url>
-tabs / switch to <platform>
 
---- GMAIL ---
-check email
-send email to <email> subject: <s> body: <b>
-reply to <name> <message>
+--- JOB SEARCH (read only — safe) ---
+search jobs <role> <platform>
+  e.g. search jobs react developer naukri
+  e.g. search jobs mern developer indeed
+read job <url>
+write cover letter <role> <company>
+draft email <hr@email.com> <role> <company>
 
---- WHATSAPP ---
+--- MESSAGING ---
 whatsapp <contact> <message>
 read whatsapp <contact>
 check whatsapp
-
---- TELEGRAM ---
 telegram <contact> <message>
-read telegram <contact>
 check telegram
+
+--- GMAIL ---
+check email
+compose email to <email> about <what to say>
 
 --- PROFILE ---
 profile / fury profile reload
+
+--- TABS ---
+tabs / switch to <platform>
 
 --- PERMISSIONS ---
 permissions
@@ -1090,7 +1061,6 @@ fury permission grant/deny <cap>
 
 --- DEBUG ---
 fury stats / fury patterns / fury failures
-fury knows <concept>
 fury help
 =====================
 """)

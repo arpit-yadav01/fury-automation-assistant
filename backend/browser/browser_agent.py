@@ -1,162 +1,112 @@
 # browser/browser_agent.py
+# FIXED: uses real Chrome via subprocess — no Playwright
+# This stops the "two browser" problem permanently
 
-from playwright.sync_api import sync_playwright
+import os
+import subprocess
+import time
 
-playwright_instance = None
-browser = None
-current_page = None
+# -------------------------
+# FIND REAL CHROME
+# Order: Chrome > Brave > Edge > Chrome for Testing (last resort)
+# -------------------------
+
+_PATHS = [
+    r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+    r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+    os.path.expanduser(r"~\AppData\Local\Google\Chrome\Application\chrome.exe"),
+    r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+    r"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe",
+    r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+    os.path.expanduser(r"~\AppData\Local\Google\Chrome for Testing\chrome.exe"),
+]
+
+_chrome_path = None
+
+def _get_chrome():
+    global _chrome_path
+    if _chrome_path:
+        return _chrome_path
+    for path in _PATHS:
+        if os.path.exists(path):
+            _chrome_path = path
+            return path
+    return None
 
 
-def start_browser():
-    global playwright_instance, browser
-
-    if playwright_instance is None:
-        playwright_instance = sync_playwright().start()
-        browser = playwright_instance.chromium.launch(headless=False)
-
-
-def ensure_page():
-    """Ensure we always have a valid browser page"""
-    global browser, current_page
-
-    if browser is None:
-        start_browser()
-
+def _focus_real_browser():
+    """Bring real Chrome/Brave to foreground — skip Chrome for Testing."""
     try:
-        if current_page is None or current_page.is_closed():
-            current_page = browser.new_page()
+        import pygetwindow as gw
+        import win32gui, win32con
+        for w in gw.getAllWindows():
+            if not w.title:
+                continue
+            t = w.title.lower()
+            if "for testing" in t:
+                continue
+            if any(b in t for b in ["chrome", "brave", "firefox", "edge"]):
+                hwnd = w._hWnd
+                if win32gui.IsIconic(hwnd):
+                    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+                    time.sleep(0.2)
+                win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
+                win32gui.SetForegroundWindow(hwnd)
+                time.sleep(0.3)
+                return True
     except:
-        current_page = browser.new_page()
+        pass
+    return False
 
+
+# -------------------------
+# OPEN WEBSITE
+# Opens in real Chrome — new tab if already running
+# -------------------------
 
 def open_website(url):
-    global current_page
+    """Open URL in real Chrome. Opens new tab if Chrome is already running."""
+    chrome = _get_chrome()
+    if chrome:
+        try:
+            subprocess.Popen([chrome, "--new-tab", url])
+            print(f"Opening: {url}")
+            time.sleep(2)
+            _focus_real_browser()
+            return True
+        except Exception as e:
+            print(f"Chrome error: {e}")
+    # fallback
+    import webbrowser
+    webbrowser.open(url)
+    time.sleep(2)
+    return True
 
-    start_browser()
-    ensure_page()
 
-    try:
-        print("Opening:", url)
-        current_page.goto(url)
-
-    except:
-        # If page crashed, recreate it
-        print("Page crashed, recreating tab...")
-
-        current_page = browser.new_page()
-        current_page.goto(url)
-
+# -------------------------
+# SEARCH ON PAGE
+# Types search query in focused browser using pyautogui
+# No Playwright needed
+# -------------------------
 
 def search_on_page(query, selector=None):
-
-    global current_page
-
-    ensure_page()
-
+    """Type search in focused browser via address bar."""
     try:
-
-        current_page.wait_for_timeout(2000)
-
-        # Auto detect website
-        if "youtube" in current_page.url:
-            selector = 'input[name="search_query"]'
-
-        elif "google" in current_page.url:
-            selector = 'input[name="q"]'
-
-        if selector is None:
-            print("No selector available")
-            return
-
-        current_page.wait_for_selector(selector, timeout=15000)
-
-        current_page.fill(selector, query)
-
-        current_page.keyboard.press("Enter")
-
-        print("Searching:", query)
-
+        import pyautogui
+        _focus_real_browser()
+        time.sleep(0.5)
+        pyautogui.hotkey("ctrl", "l")
+        time.sleep(0.3)
+        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+        pyautogui.write(url, interval=0.03)
+        pyautogui.press("enter")
+        print(f"Searching: {query}")
+        time.sleep(2)
     except Exception as e:
-
-        print("Search failed:", e)
-
+        print(f"Search failed: {e}")
 
 
 def smart_search(query):
-
-    try:
-
-        from browser.browser_agent import current_page, ensure_page
-        import time
-
-        ensure_page()
-
-        # wait for page load
-        current_page.wait_for_load_state("domcontentloaded")
-
-        time.sleep(2)  # ✅ human-like delay (VERY IMPORTANT)
-
-        url = current_page.url
-
-        selectors = []
-
-        # -----------------------
-        # GOOGLE
-        # -----------------------
-
-        if "google" in url:
-
-            selectors = [
-                'input[name="q"]',
-                'textarea[name="q"]',
-                'input[type="text"]'
-            ]
-
-        # -----------------------
-        # YOUTUBE
-        # -----------------------
-
-        elif "youtube" in url:
-
-            selectors = [
-                'input[name="search_query"]',
-                'input#search'
-            ]
-
-        else:
-            print("Unknown site for smart search")
-            return
-
-        input_box = None
-
-        # ✅ try multiple selectors
-        for sel in selectors:
-
-            try:
-                current_page.wait_for_selector(sel, timeout=3000)
-                input_box = current_page.locator(sel)
-                print("Found input:", sel)
-                break
-            except:
-                continue
-
-        if not input_box:
-            print("No input field found")
-            return
-
-        # ✅ click before typing (important)
-        input_box.click()
-
-        # clear existing
-        input_box.fill("")
-
-        # type query
-        input_box.type(query, delay=50)
-
-        # press enter
-        current_page.keyboard.press("Enter")
-
-        print("Smart search:", query)
-
-    except Exception as e:
-        print("Smart search failed:", e)
+    """Navigate to search URL directly."""
+    open_website(f"https://www.google.com/search?q={query.replace(' ', '+')}")
+    print(f"Smart search: {query}")
