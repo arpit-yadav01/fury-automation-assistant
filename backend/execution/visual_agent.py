@@ -522,6 +522,12 @@
 # YouTube / WhatsApp / LeetCode navigation = 0 tokens
 # LLM only called for unknown situations
 
+
+
+# execution/visual_agent.py
+# TOKEN-EFFICIENT — hardcoded playbooks for known tasks
+# YouTube now uses direct video URL — no ads, no coordinate guessing
+
 import os
 import json
 import re
@@ -541,7 +547,8 @@ from memory.task_memory import (
 GROQ_KEY = os.getenv("GROQ_API_KEY")
 client = None
 if GROQ_KEY:
-    client = OpenAI(api_key=GROQ_KEY, base_url="https://api.groq.com/openai/v1")
+    client = OpenAI(api_key=GROQ_KEY,
+                    base_url="https://api.groq.com/openai/v1")
 
 MAX_STEPS  = 12
 MAX_STUCK  = 3
@@ -551,70 +558,22 @@ SCREEN_W   = 1920
 SCREEN_H   = 1080
 
 PLATFORM_KEYWORDS = {
-    "leetcode": "leetcode.com",
-    "naukri": "naukri.com",
-    "indeed": "indeed.com",
+    "leetcode":    "leetcode.com",
+    "naukri":      "naukri.com",
+    "indeed":      "indeed.com",
     "internshala": "internshala.com",
-    "linkedin": "linkedin.com",
-    "gmail": "mail.google.com",
-    "whatsapp": "web.whatsapp.com",
-    "telegram": "web.telegram.org",
-    "youtube": "youtube.com",
-    "github": "github.com",
+    "linkedin":    "linkedin.com",
+    "gmail":       "mail.google.com",
+    "whatsapp":    "web.whatsapp.com",
+    "telegram":    "web.telegram.org",
+    "youtube":     "youtube.com",
+    "github":      "github.com",
 }
 
+
 # -------------------------
-# HARDCODED PLAYBOOKS
-# Zero tokens — deterministic step sequences for known tasks
+# HELPERS
 # -------------------------
-
-def _playbook_youtube_search(query):
-    """Steps to search and play a YouTube video. Zero tokens."""
-    encoded = query.replace(" ", "+")
-    return [
-        {"action": "open_url",
-         "url": f"https://www.youtube.com/results?search_query={encoded}"},
-        {"action": "wait", "time": 3},
-        {"action": "click", "x": 400, "y": 250},   # first video
-        {"action": "wait", "time": 2},
-        {"action": "done"},
-    ]
-
-def _playbook_whatsapp_send(contact, message):
-    """Steps to send a WhatsApp message. Zero tokens."""
-    return [
-        {"action": "open_url", "url": "https://web.whatsapp.com"},
-        {"action": "wait", "time": 3},
-        {"action": "click", "x": 300, "y": 55},    # search bar
-        {"action": "wait", "time": 1},
-        {"action": "type", "text": contact},
-        {"action": "wait", "time": 2},
-        {"action": "click", "x": 300, "y": 150},   # first result
-        {"action": "wait", "time": 1},
-        {"action": "click", "x": 960, "y": 1020},  # message input
-        {"action": "type", "text": message},
-        {"action": "press", "key": "enter"},
-        {"action": "wait", "time": 1},
-        {"action": "done"},
-    ]
-
-def _playbook_whatsapp_check():
-    """Steps to check WhatsApp unread. Zero tokens."""
-    return [
-        {"action": "open_url", "url": "https://web.whatsapp.com"},
-        {"action": "wait", "time": 3},
-        {"action": "done"},  # user can see unread chats on screen
-    ]
-
-def _playbook_leetcode_open(slug):
-    """Steps to open a LeetCode problem. Zero tokens."""
-    return [
-        {"action": "open_url",
-         "url": f"https://leetcode.com/problems/{slug}/"},
-        {"action": "wait", "time": 3},
-        {"action": "done"},
-    ]
-
 
 def _detect_platform(goal):
     goal_lower = goal.lower()
@@ -623,9 +582,11 @@ def _detect_platform(goal):
             return platform
     return None
 
+
 def _extract_query(goal):
     g = goal.lower()
-    for p in ["play ", "search for ", "search ", "find ", "watch ", "listen to "]:
+    for p in ["play ", "search for ", "search ", "find ",
+               "watch ", "listen to "]:
         if p in g:
             q = g.split(p, 1)[1]
             for s in [" on youtube", " on google", " on naukri"]:
@@ -633,36 +594,6 @@ def _extract_query(goal):
             return q.strip()
     return ""
 
-def _get_playbook(goal, platform, context):
-    """Return hardcoded playbook if goal matches known pattern."""
-    g = goal.lower()
-
-    # YouTube play/search
-    if platform == "youtube":
-        query = _extract_query(goal) or "music"
-        return _playbook_youtube_search(query), "youtube_search"
-
-    # WhatsApp send
-    if platform == "whatsapp":
-        contact = (context or {}).get("contact", "")
-        if "send" in g or "say" in g or "message" in g:
-            # extract message
-            message = ""
-            for sep in ["send message:", "send:", "say:", ":"]:
-                if sep in g:
-                    message = g.split(sep, 1)[1].strip()
-                    break
-            if contact and message:
-                return _playbook_whatsapp_send(contact, message), "whatsapp_send"
-        return _playbook_whatsapp_check(), "whatsapp_check"
-
-    # LeetCode open
-    if platform == "leetcode":
-        slug = (context or {}).get("slug", "")
-        if slug:
-            return _playbook_leetcode_open(slug), "leetcode_open"
-
-    return None, None
 
 def _parse_json_safe(raw):
     if not raw:
@@ -687,6 +618,7 @@ def _parse_json_safe(raw):
         pass
     return None
 
+
 def _ocr_screen(img):
     try:
         import pytesseract
@@ -697,6 +629,7 @@ def _ocr_screen(img):
         return " | ".join(lines[:6])
     except:
         return "screen captured"
+
 
 def _ensure_browser_focused():
     try:
@@ -721,45 +654,153 @@ def _ensure_browser_focused():
         pass
     return False
 
+
+# -------------------------
+# HARDCODED PLAYBOOKS
+# Zero tokens for known tasks
+# -------------------------
+
+def _playbook_youtube(query):
+    """
+    Play YouTube — uses direct video URL.
+    No ads. No coordinate guessing. Zero tokens.
+    """
+    try:
+        from platforms.youtube_agent import search_youtube
+        results = search_youtube(query)
+        if results:
+            video_url = results[0]
+            print(f"   🎵 Direct URL: {video_url}")
+            return [
+                {"action": "open_url", "url": video_url},
+                {"action": "wait", "time": 2},
+                {"action": "done"},
+            ]
+    except Exception as e:
+        print(f"YouTube search error: {e}")
+
+    # fallback — search page + click
+    encoded = query.replace(" ", "+")
+    return [
+        {"action": "open_url",
+         "url": f"https://www.youtube.com/results?search_query={encoded}"},
+        {"action": "wait", "time": 3},
+        {"action": "click", "x": 400, "y": 250},
+        {"action": "wait", "time": 2},
+        {"action": "done"},
+    ]
+
+
+def _playbook_whatsapp_send(contact, message):
+    """Send WhatsApp message. Zero tokens."""
+    return [
+        {"action": "open_url", "url": "https://web.whatsapp.com"},
+        {"action": "wait", "time": 3},
+        {"action": "click", "x": 300, "y": 55},
+        {"action": "wait", "time": 1},
+        {"action": "type", "text": contact},
+        {"action": "wait", "time": 2},
+        {"action": "click", "x": 300, "y": 150},
+        {"action": "wait", "time": 1},
+        {"action": "click", "x": 960, "y": 1020},
+        {"action": "type", "text": message},
+        {"action": "press", "key": "enter"},
+        {"action": "wait", "time": 1},
+        {"action": "done"},
+    ]
+
+
+def _playbook_whatsapp_check():
+    """Check WhatsApp. Zero tokens."""
+    return [
+        {"action": "open_url", "url": "https://web.whatsapp.com"},
+        {"action": "wait", "time": 3},
+        {"action": "done"},
+    ]
+
+
+def _playbook_leetcode_open(slug):
+    """Open LeetCode problem. Zero tokens."""
+    return [
+        {"action": "open_url",
+         "url": f"https://leetcode.com/problems/{slug}/"},
+        {"action": "wait", "time": 3},
+        {"action": "done"},
+    ]
+
+
+def _get_playbook(goal, platform, context):
+    """Return hardcoded playbook if goal matches known pattern."""
+    g = goal.lower()
+
+    if platform == "youtube":
+        query = _extract_query(goal) or goal
+        return _playbook_youtube(query), "youtube"
+
+    if platform == "whatsapp":
+        contact = (context or {}).get("contact", "")
+        if contact and any(w in g for w in ["send", "say", "message", ":"]):
+            message = ""
+            for sep in [":", "send message", "say "]:
+                if sep in g:
+                    message = g.split(sep, 1)[1].strip()
+                    break
+            if message:
+                return _playbook_whatsapp_send(contact, message), "whatsapp_send"
+        return _playbook_whatsapp_check(), "whatsapp_check"
+
+    if platform == "leetcode":
+        slug = (context or {}).get("slug", "")
+        if slug:
+            return _playbook_leetcode_open(slug), "leetcode_open"
+
+    return None, None
+
+
 def _build_prompt():
     return f"""You are Fury on Windows {SCREEN_W}x{SCREEN_H}.
-Decide ONE action based on OCR screen text.
-Return ONE JSON object only.
+Decide ONE action from OCR screen text. Return ONE JSON only.
 
 {{"action":"click","x":400,"y":250,"reasoning":"why","done":false,"failed":false,"failure_reason":null}}
 
 Actions: open_url, click, type, press, wait, scroll, done, failed
-Coordinates are pixels. YouTube first video: x=400,y=250.
+Use pixel coordinates. YouTube first video: x=400,y=250.
 """
 
+
+# -------------------------
+# VISUAL AGENT
+# -------------------------
 
 class VisualAgent:
 
     def __init__(self):
         self.steps_taken = []
-        self.goal = ""
-        self.start_time = None
-        self.last_hash = None
+        self.goal        = ""
+        self.start_time  = None
+        self.last_hash   = None
         self.stuck_count = 0
-        self.last_url = None
+        self.last_url    = None
 
     def run(self, goal, max_steps=MAX_STEPS, context=None, resume=False):
 
         platform = _detect_platform(goal)
-        self.goal = goal
-        self.start_time = time.time()
+        self.goal        = goal
+        self.start_time  = time.time()
         self.stuck_count = 0
-        self.last_hash = None
-        self.last_url = None
+        self.last_hash   = None
+        self.last_url    = None
+
         if not resume:
             self.steps_taken = []
 
-        # enrich context
+        # enrich context with profile
         if context is None:
             context = {}
         try:
             from brain.personal_profile import profile
-            context = {**profile.get_form_context(platform=platform), **context}
+            context = {**profile.get_form_context(platform=platform),
+                       **context}
         except:
             pass
 
@@ -767,15 +808,15 @@ class VisualAgent:
         print(f"🤖 Visual Agent: {goal}")
         print(f"   Platform: {platform or 'general'}")
 
-        # check for hardcoded playbook first — zero tokens
-        playbook, playbook_name = _get_playbook(goal, platform, context)
+        # try hardcoded playbook first — zero tokens
+        playbook, name = _get_playbook(goal, platform, context)
 
         if playbook:
-            print(f"   Mode: PLAYBOOK ({playbook_name}) — 0 tokens")
+            print(f"   Mode: PLAYBOOK ({name}) — 0 tokens")
             print(f"{'='*50}\n")
             return self._run_playbook(playbook, context)
 
-        # no playbook — navigate then use LLM
+        # no playbook — use LLM
         print(f"   Mode: LLM-assisted")
         print(f"{'='*50}\n")
 
@@ -818,12 +859,14 @@ class VisualAgent:
             screen_text = _ocr_screen(screen_img)
             print(f"Screen: {screen_text[:80]}")
 
-            action = self._decide(goal, screen_text, step_num, context, prompt)
+            action = self._decide(goal, screen_text, step_num,
+                                  context, prompt)
             if action is None:
                 time.sleep(2)
                 continue
 
-            print(f"Action: {action.get('action')} | {action.get('reasoning','')[:60]}")
+            print(f"Action: {action.get('action')} | "
+                  f"{action.get('reasoning','')[:60]}")
 
             if action.get("action") == "done" or action.get("done"):
                 print("✅ Done!")
@@ -832,8 +875,9 @@ class VisualAgent:
                 return self._finish("success", context)
 
             if action.get("action") == "failed" or action.get("failed"):
-                return self._finish("failed", context,
-                                    action.get("failure_reason", "unknown"))
+                return self._finish(
+                    "failed", context,
+                    action.get("failure_reason", "unknown"))
 
             # prevent duplicate URL
             if action.get("action") == "open_url":
@@ -846,7 +890,8 @@ class VisualAgent:
 
             # fix fractional coords
             if action.get("action") == "click":
-                x, y = action.get("x", 400), action.get("y", 300)
+                x = action.get("x", 400)
+                y = action.get("y", 300)
                 if isinstance(x, float) and x <= 1.0:
                     x = int(x * SCREEN_W)
                 if isinstance(y, float) and y <= 1.0:
@@ -855,7 +900,8 @@ class VisualAgent:
 
             self._execute(action)
             self._record(action, screen_text, True)
-            save_task_state(goal, self.steps_taken, step_num, "running", context)
+            save_task_state(goal, self.steps_taken, step_num,
+                            "running", context)
 
             if action.get("action") == "open_url":
                 print("Waiting for page...")
@@ -866,18 +912,23 @@ class VisualAgent:
 
         return self._finish("max_steps", context)
 
+    # -------------------------
+    # PLAYBOOK RUNNER
+    # -------------------------
+
     def _run_playbook(self, steps, context):
-        """Execute hardcoded steps — no LLM calls."""
+        """Execute hardcoded steps — zero LLM calls."""
         print(f"Running {len(steps)} playbook steps...\n")
 
         for i, action in enumerate(steps, 1):
-            print(f"Step {i}: {action.get('action')} ", end="")
+            act = action.get("action")
+            print(f"Step {i}: {act} ", end="")
 
-            if action.get("action") == "done":
+            if act == "done":
                 print("✅")
                 return self._finish("success", context)
 
-            if action.get("action") == "wait":
+            if act == "wait":
                 t = action.get("time", 2)
                 print(f"({t}s)")
                 time.sleep(t)
@@ -887,13 +938,17 @@ class VisualAgent:
             self._execute(action)
             self._record(action, "playbook", True)
 
-            if action.get("action") == "open_url":
+            if act == "open_url":
                 time.sleep(3)
                 _ensure_browser_focused()
             else:
                 time.sleep(0.8)
 
         return self._finish("success", context)
+
+    # -------------------------
+    # LLM DECISION
+    # -------------------------
 
     def _decide(self, goal, screen_text, step_num, context, prompt):
         if not client:
@@ -920,7 +975,8 @@ class VisualAgent:
                         temperature=0.1,
                         max_tokens=120
                     )
-                    return _parse_json_safe(resp.choices[0].message.content)
+                    return _parse_json_safe(
+                        resp.choices[0].message.content)
                 except Exception as e:
                     if "429" in str(e):
                         m = re.search(r'try again in (\d+)m', str(e))
@@ -935,39 +991,56 @@ class VisualAgent:
             print(f"Decision error: {e}")
             return None
 
+    # -------------------------
+    # EXECUTE
+    # -------------------------
+
     def _execute(self, action):
         act = action.get("action")
         try:
             if act == "click":
                 import pyautogui
-                x, y = int(action.get("x", 400)), int(action.get("y", 300))
+                x = int(action.get("x", 400))
+                y = int(action.get("y", 300))
                 _ensure_browser_focused()
                 time.sleep(0.2)
                 pyautogui.click(x, y)
                 print(f"  Clicked ({x}, {y})")
+
             elif act == "type":
                 import pyautogui
-                pyautogui.write(action.get("text", ""), interval=0.05)
+                pyautogui.write(action.get("text", ""),
+                                interval=0.05)
                 print(f"  Typed: {action.get('text','')}")
+
             elif act == "press":
                 import pyautogui
                 pyautogui.press(action.get("key", "enter"))
+
             elif act == "scroll":
                 import pyautogui
                 d = action.get("direction", "down")
                 a = action.get("amount", 3)
                 pyautogui.scroll(a if d == "down" else -a)
+
             elif act == "hotkey":
                 import pyautogui
                 pyautogui.hotkey(*action.get("keys", []))
+
             else:
                 perform_ui_action(action)
+
         except Exception as e:
             print(f"  Execute error: {e}")
 
+    # -------------------------
+    # HELPERS
+    # -------------------------
+
     def _finish(self, outcome, context=None, reason=None):
         ms = int((time.time() - self.start_time) * 1000)
-        save_to_history(self.goal, outcome, len(self.steps_taken), ms, context)
+        save_to_history(self.goal, outcome,
+                        len(self.steps_taken), ms, context)
         if outcome in ("success", "failed"):
             clear_task_state()
         print(f"\n{'='*50}")
@@ -977,16 +1050,20 @@ class VisualAgent:
             print(f"   Why: {reason}")
         print(f"{'='*50}\n")
         return {
-            "goal": self.goal, "outcome": outcome,
+            "goal": self.goal,
+            "outcome": outcome,
             "steps": len(self.steps_taken),
             "steps_taken": self.steps_taken,
-            "duration_ms": ms, "reason": reason
+            "duration_ms": ms,
+            "reason": reason,
         }
 
     def _record(self, action, screen, success=True):
         self.steps_taken.append({
-            "action": action, "screen": screen[:60],
-            "success": success, "timestamp": str(datetime.now())
+            "action": action,
+            "screen": screen[:60],
+            "success": success,
+            "timestamp": str(datetime.now()),
         })
 
     def _hash(self, img):
@@ -998,14 +1075,21 @@ class VisualAgent:
             return None
 
 
-def run_visual_goal(goal, context=None, max_steps=MAX_STEPS, resume=False):
+# -------------------------
+# ENTRY POINTS
+# -------------------------
+
+def run_visual_goal(goal, context=None,
+                    max_steps=MAX_STEPS, resume=False):
     return VisualAgent().run(goal, max_steps=max_steps,
                              context=context, resume=resume)
+
 
 def resume_last_task():
     state = load_task_state()
     if not state:
         print("No interrupted task.")
         return None
-    return run_visual_goal(state.get("goal"), context=state.get("context"),
+    return run_visual_goal(state.get("goal"),
+                           context=state.get("context"),
                            resume=True)
