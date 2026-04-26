@@ -528,6 +528,18 @@
 # TOKEN-EFFICIENT — hardcoded playbooks for known tasks
 # YouTube now uses direct video URL — no ads, no coordinate guessing
 
+
+
+
+
+
+
+
+
+# execution/visual_agent.py
+# STEP 131-143 — Fixed WhatsApp coordinates (Step 144)
+# Auto-maximizes browser before every playbook click
+
 import os
 import json
 import re
@@ -570,10 +582,29 @@ PLATFORM_KEYWORDS = {
     "github":      "github.com",
 }
 
+# ── Measured coordinates (1920x1080 maximized Chrome) ──
+COORDS = {
+    # YouTube
+    "yt_first_video":   (400, 250),
+    "yt_second_video":  (400, 450),
 
-# -------------------------
+    # WhatsApp Web — measured Step 144
+    "wa_search":        (289, 216),   # search bar "Search or start new chat"
+    "wa_first_result":  (289, 320),   # first contact in search results
+    "wa_msg_input":     (960, 980),   # message input box (bottom of chat)
+                                       # UPDATE with measured value when available
+
+    # LeetCode
+    "lc_lang_selector": (1006, 239),
+    "lc_code_editor":   (1200, 500),
+    "lc_run":           (1650, 940),
+    "lc_submit":        (1750, 940),
+}
+
+
+# ─────────────────────────────
 # HELPERS
-# -------------------------
+# ─────────────────────────────
 
 def _detect_platform(goal):
     goal_lower = goal.lower()
@@ -632,6 +663,7 @@ def _ocr_screen(img):
 
 
 def _ensure_browser_focused():
+    """Focus AND maximize the real browser window."""
     try:
         import win32gui, win32con
         import pygetwindow as gw
@@ -643,94 +675,126 @@ def _ensure_browser_focused():
                 continue
             if any(b in t for b in ["chrome", "brave", "firefox", "edge"]):
                 hwnd = w._hWnd
+                # restore if minimized
                 if win32gui.IsIconic(hwnd):
                     win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-                    time.sleep(0.2)
+                    time.sleep(0.3)
+                # ALWAYS maximize so coordinates are correct
                 win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
                 win32gui.SetForegroundWindow(hwnd)
-                time.sleep(0.3)
+                time.sleep(0.4)
                 return True
     except:
         pass
     return False
 
 
-# -------------------------
-# HARDCODED PLAYBOOKS
-# Zero tokens for known tasks
-# -------------------------
+# ─────────────────────────────
+# HARDCODED PLAYBOOKS — 0 tokens
+# ─────────────────────────────
 
 def _playbook_youtube(query):
-    """
-    Play YouTube — uses direct video URL.
-    No ads. No coordinate guessing. Zero tokens.
-    """
+    """Play YouTube — direct video URL, no ads."""
     try:
         from platforms.youtube_agent import search_youtube
         results = search_youtube(query)
         if results:
-            video_url = results[0]
-            print(f"   🎵 Direct URL: {video_url}")
+            print(f"   🎵 Direct: {results[0]}")
             return [
-                {"action": "open_url", "url": video_url},
+                {"action": "open_url", "url": results[0]},
                 {"action": "wait", "time": 2},
                 {"action": "done"},
             ]
     except Exception as e:
         print(f"YouTube search error: {e}")
 
-    # fallback — search page + click
+    # fallback
     encoded = query.replace(" ", "+")
     return [
         {"action": "open_url",
          "url": f"https://www.youtube.com/results?search_query={encoded}"},
         {"action": "wait", "time": 3},
-        {"action": "click", "x": 400, "y": 250},
+        {"action": "click", "x": COORDS["yt_first_video"][0],
+         "y": COORDS["yt_first_video"][1]},
         {"action": "wait", "time": 2},
         {"action": "done"},
     ]
 
 
 def _playbook_whatsapp_send(contact, message):
-    """Send WhatsApp message. Zero tokens."""
+    """
+    Send WhatsApp message — fixed coordinates (Step 144).
+    Flow: open → wait → click search → type contact →
+          wait for results → click first result →
+          click message input → type → enter → done
+    """
     return [
         {"action": "open_url", "url": "https://web.whatsapp.com"},
-        {"action": "wait", "time": 3},
-        {"action": "click", "x": 300, "y": 55},
+        {"action": "wait", "time": 4},          # wait for chats to load
+        {"action": "maximize"},                  # ensure maximized
+        {"action": "click",
+         "x": COORDS["wa_search"][0],
+         "y": COORDS["wa_search"][1]},           # click search bar
         {"action": "wait", "time": 1},
-        {"action": "type", "text": contact},
-        {"action": "wait", "time": 2},
-        {"action": "click", "x": 300, "y": 150},
+        {"action": "type", "text": contact},     # type contact name
+        {"action": "wait", "time": 2},           # wait for search results
+        {"action": "click",
+         "x": COORDS["wa_first_result"][0],
+         "y": COORDS["wa_first_result"][1]},     # click first result
         {"action": "wait", "time": 1},
-        {"action": "click", "x": 960, "y": 1020},
-        {"action": "type", "text": message},
-        {"action": "press", "key": "enter"},
+        {"action": "click",
+         "x": COORDS["wa_msg_input"][0],
+         "y": COORDS["wa_msg_input"][1]},        # click message input
+        {"action": "wait", "time": 0.5},
+        {"action": "type", "text": message},     # type message
+        {"action": "press", "key": "enter"},     # send
         {"action": "wait", "time": 1},
         {"action": "done"},
     ]
 
 
 def _playbook_whatsapp_check():
-    """Check WhatsApp. Zero tokens."""
+    """Open WhatsApp — 0 tokens."""
     return [
         {"action": "open_url", "url": "https://web.whatsapp.com"},
         {"action": "wait", "time": 3},
+        {"action": "maximize"},
+        {"action": "done"},
+    ]
+
+
+def _playbook_whatsapp_read(contact):
+    """Open WhatsApp and navigate to a contact's chat."""
+    return [
+        {"action": "open_url", "url": "https://web.whatsapp.com"},
+        {"action": "wait", "time": 4},
+        {"action": "maximize"},
+        {"action": "click",
+         "x": COORDS["wa_search"][0],
+         "y": COORDS["wa_search"][1]},
+        {"action": "wait", "time": 1},
+        {"action": "type", "text": contact},
+        {"action": "wait", "time": 2},
+        {"action": "click",
+         "x": COORDS["wa_first_result"][0],
+         "y": COORDS["wa_first_result"][1]},
+        {"action": "wait", "time": 1},
         {"action": "done"},
     ]
 
 
 def _playbook_leetcode_open(slug):
-    """Open LeetCode problem. Zero tokens."""
+    """Open LeetCode problem — 0 tokens."""
     return [
         {"action": "open_url",
          "url": f"https://leetcode.com/problems/{slug}/"},
         {"action": "wait", "time": 3},
+        {"action": "maximize"},
         {"action": "done"},
     ]
 
 
 def _get_playbook(goal, platform, context):
-    """Return hardcoded playbook if goal matches known pattern."""
     g = goal.lower()
 
     if platform == "youtube":
@@ -739,6 +803,8 @@ def _get_playbook(goal, platform, context):
 
     if platform == "whatsapp":
         contact = (context or {}).get("contact", "")
+
+        # send message
         if contact and any(w in g for w in ["send", "say", "message", ":"]):
             message = ""
             for sep in [":", "send message", "say "]:
@@ -747,6 +813,12 @@ def _get_playbook(goal, platform, context):
                     break
             if message:
                 return _playbook_whatsapp_send(contact, message), "whatsapp_send"
+
+        # read messages
+        if contact and "read" in g:
+            return _playbook_whatsapp_read(contact), "whatsapp_read"
+
+        # check unread
         return _playbook_whatsapp_check(), "whatsapp_check"
 
     if platform == "leetcode":
@@ -768,9 +840,9 @@ Use pixel coordinates. YouTube first video: x=400,y=250.
 """
 
 
-# -------------------------
+# ─────────────────────────────
 # VISUAL AGENT
-# -------------------------
+# ─────────────────────────────
 
 class VisualAgent:
 
@@ -794,7 +866,6 @@ class VisualAgent:
         if not resume:
             self.steps_taken = []
 
-        # enrich context with profile
         if context is None:
             context = {}
         try:
@@ -808,7 +879,6 @@ class VisualAgent:
         print(f"🤖 Visual Agent: {goal}")
         print(f"   Platform: {platform or 'general'}")
 
-        # try hardcoded playbook first — zero tokens
         playbook, name = _get_playbook(goal, platform, context)
 
         if playbook:
@@ -816,7 +886,6 @@ class VisualAgent:
             print(f"{'='*50}\n")
             return self._run_playbook(playbook, context)
 
-        # no playbook — use LLM
         print(f"   Mode: LLM-assisted")
         print(f"{'='*50}\n")
 
@@ -859,8 +928,7 @@ class VisualAgent:
             screen_text = _ocr_screen(screen_img)
             print(f"Screen: {screen_text[:80]}")
 
-            action = self._decide(goal, screen_text, step_num,
-                                  context, prompt)
+            action = self._decide(goal, screen_text, step_num, context, prompt)
             if action is None:
                 time.sleep(2)
                 continue
@@ -879,16 +947,14 @@ class VisualAgent:
                     "failed", context,
                     action.get("failure_reason", "unknown"))
 
-            # prevent duplicate URL
             if action.get("action") == "open_url":
                 url = action.get("url", "")
                 if url == self.last_url:
                     action = {"action": "click", "x": 400, "y": 250,
-                              "reasoning": "already on page, clicking result"}
+                              "reasoning": "already on page"}
                 else:
                     self.last_url = url
 
-            # fix fractional coords
             if action.get("action") == "click":
                 x = action.get("x", 400)
                 y = action.get("y", 300)
@@ -912,12 +978,11 @@ class VisualAgent:
 
         return self._finish("max_steps", context)
 
-    # -------------------------
+    # ─────────────────────────────
     # PLAYBOOK RUNNER
-    # -------------------------
+    # ─────────────────────────────
 
     def _run_playbook(self, steps, context):
-        """Execute hardcoded steps — zero LLM calls."""
         print(f"Running {len(steps)} playbook steps...\n")
 
         for i, action in enumerate(steps, 1):
@@ -934,6 +999,13 @@ class VisualAgent:
                 time.sleep(t)
                 continue
 
+            # maximize — ensures coordinates are correct
+            if act == "maximize":
+                print("(maximizing browser)")
+                _ensure_browser_focused()
+                time.sleep(0.5)
+                continue
+
             print()
             self._execute(action)
             self._record(action, "playbook", True)
@@ -946,9 +1018,9 @@ class VisualAgent:
 
         return self._finish("success", context)
 
-    # -------------------------
+    # ─────────────────────────────
     # LLM DECISION
-    # -------------------------
+    # ─────────────────────────────
 
     def _decide(self, goal, screen_text, step_num, context, prompt):
         if not client:
@@ -975,8 +1047,7 @@ class VisualAgent:
                         temperature=0.1,
                         max_tokens=120
                     )
-                    return _parse_json_safe(
-                        resp.choices[0].message.content)
+                    return _parse_json_safe(resp.choices[0].message.content)
                 except Exception as e:
                     if "429" in str(e):
                         m = re.search(r'try again in (\d+)m', str(e))
@@ -991,9 +1062,9 @@ class VisualAgent:
             print(f"Decision error: {e}")
             return None
 
-    # -------------------------
+    # ─────────────────────────────
     # EXECUTE
-    # -------------------------
+    # ─────────────────────────────
 
     def _execute(self, action):
         act = action.get("action")
@@ -1009,8 +1080,7 @@ class VisualAgent:
 
             elif act == "type":
                 import pyautogui
-                pyautogui.write(action.get("text", ""),
-                                interval=0.05)
+                pyautogui.write(action.get("text", ""), interval=0.05)
                 print(f"  Typed: {action.get('text','')}")
 
             elif act == "press":
@@ -1033,9 +1103,9 @@ class VisualAgent:
         except Exception as e:
             print(f"  Execute error: {e}")
 
-    # -------------------------
+    # ─────────────────────────────
     # HELPERS
-    # -------------------------
+    # ─────────────────────────────
 
     def _finish(self, outcome, context=None, reason=None):
         ms = int((time.time() - self.start_time) * 1000)
@@ -1075,9 +1145,9 @@ class VisualAgent:
             return None
 
 
-# -------------------------
+# ─────────────────────────────
 # ENTRY POINTS
-# -------------------------
+# ─────────────────────────────
 
 def run_visual_goal(goal, context=None,
                     max_steps=MAX_STEPS, resume=False):
