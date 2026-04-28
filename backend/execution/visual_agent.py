@@ -591,7 +591,7 @@ COORDS = {
     # WhatsApp Web — measured Step 144
     "wa_search":        (289, 216),   # search bar "Search or start new chat"
     "wa_first_result":  (289, 320),   # first contact in search results
-    "wa_msg_input":     (960, 980),   # message input box (bottom of chat)
+    "wa_msg_input":     (980, 987),    # message input box (bottom of chat)
                                        # UPDATE with measured value when available
 
     # LeetCode
@@ -982,8 +982,21 @@ class VisualAgent:
     # PLAYBOOK RUNNER
     # ─────────────────────────────
 
+    # REPLACE _run_playbook() in execution/visual_agent.py with this version
+# Adds screen verification after key steps + LLM fallback when playbook fails
+
     def _run_playbook(self, steps, context):
+        """
+        Execute hardcoded steps.
+        If a critical step fails (click lands wrong, page didn't load),
+        automatically falls back to LLM mode to recover.
+        """
         print(f"Running {len(steps)} playbook steps...\n")
+
+        # track if we're stuck — same screen hash 3 times = step failed
+        last_hash    = None
+        stuck_count  = 0
+        failed_steps = 0
 
         for i, action in enumerate(steps, 1):
             act = action.get("action")
@@ -999,7 +1012,6 @@ class VisualAgent:
                 time.sleep(t)
                 continue
 
-            # maximize — ensures coordinates are correct
             if act == "maximize":
                 print("(maximizing browser)")
                 _ensure_browser_focused()
@@ -1016,7 +1028,103 @@ class VisualAgent:
             else:
                 time.sleep(0.8)
 
+            # ── VERIFY after click/type ──
+            # take screenshot and check if screen changed
+            if act in ("click", "type", "press"):
+                screen_img = capture_screen()
+                if screen_img is not None:
+                    current_hash = self._hash(screen_img)
+                    if current_hash == last_hash:
+                        stuck_count += 1
+                        print(f"  ⚠️  Screen unchanged after {act} ({stuck_count}/2)")
+                        if stuck_count >= 2:
+                            failed_steps += 1
+                            print(f"  ❌ Playbook step failed — switching to LLM mode")
+                            # fall back to LLM for remaining goal
+                            return self._llm_fallback(
+                                self.goal, context,
+                                completed_steps=i,
+                                failure_reason=f"{act} at step {i} had no effect"
+                            )
+                    else:
+                        stuck_count  = 0
+                        last_hash    = current_hash
+
         return self._finish("success", context)
+
+    def _llm_fallback(self, goal, context, completed_steps=0, failure_reason=""):
+        """
+        Called when playbook fails.
+        Switches to LLM-assisted mode to complete the goal.
+        """
+        print(f"\n🔄 Playbook failed at step {completed_steps} — switching to LLM")
+        print(f"   Reason: {failure_reason}")
+        print(f"   LLM will now take over...\n")
+
+        prompt = _build_prompt()
+        max_steps = MAX_STEPS - completed_steps  # use remaining budget
+
+        for step_num in range(1, max(max_steps, 5) + 1):
+            print(f"\n--- LLM Step {step_num} ---")
+
+            _ensure_browser_focused()
+            time.sleep(0.3)
+
+            screen_img = capture_screen()
+            if screen_img is None:
+                time.sleep(1)
+                continue
+
+            h = self._hash(screen_img)
+            if h == self.last_hash:
+                self.stuck_count += 1
+                if self.stuck_count >= MAX_STUCK:
+                    return self._finish("stuck", context,
+                                        "LLM fallback also stuck")
+            else:
+                self.stuck_count = 0
+                self.last_hash = h
+
+            screen_text = _ocr_screen(screen_img)
+            print(f"Screen: {screen_text[:80]}")
+
+            action = self._decide(goal, screen_text, step_num,
+                                  context, prompt)
+            if action is None:
+                time.sleep(2)
+                continue
+
+            print(f"Action: {action.get('action')} | "
+                  f"{action.get('reasoning','')[:60]}")
+
+            if action.get("action") == "done" or action.get("done"):
+                print("✅ LLM recovered — goal achieved!")
+                return self._finish("success", context)
+
+            if action.get("action") == "failed" or action.get("failed"):
+                return self._finish("failed", context,
+                                    action.get("failure_reason", "LLM could not recover"))
+
+            # fix fractional coords
+            if action.get("action") == "click":
+                x = action.get("x", 400)
+                y = action.get("y", 300)
+                if isinstance(x, float) and x <= 1.0:
+                    x = int(x * SCREEN_W)
+                if isinstance(y, float) and y <= 1.0:
+                    y = int(y * SCREEN_H)
+                action["x"], action["y"] = x, y
+
+            self._execute(action)
+            self._record(action, screen_text, True)
+
+            if action.get("action") == "open_url":
+                time.sleep(3)
+                _ensure_browser_focused()
+
+            time.sleep(STEP_DELAY)
+
+        return self._finish("max_steps", context)
 
     # ─────────────────────────────
     # LLM DECISION
