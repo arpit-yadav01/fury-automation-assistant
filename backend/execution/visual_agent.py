@@ -535,10 +535,9 @@
 
 
 
-
 # execution/visual_agent.py
-# STEP 131-143 — Fixed WhatsApp coordinates (Step 144)
-# Auto-maximizes browser before every playbook click
+# STEP 131-145
+# FIX: check existing tabs for ALL platforms before opening new one
 
 import os
 import json
@@ -584,17 +583,11 @@ PLATFORM_KEYWORDS = {
 
 # ── Measured coordinates (1920x1080 maximized Chrome) ──
 COORDS = {
-    # YouTube
     "yt_first_video":   (400, 250),
     "yt_second_video":  (400, 450),
-
-    # WhatsApp Web — measured Step 144
-    "wa_search":        (289, 216),   # search bar "Search or start new chat"
-    "wa_first_result":  (289, 320),   # first contact in search results
-    "wa_msg_input":     (980, 987),    # message input box (bottom of chat)
-                                       # UPDATE with measured value when available
-
-    # LeetCode
+    "wa_search":        (289, 216),
+    "wa_first_result":  (289, 320),
+    "wa_msg_input":     (980, 987),
     "lc_lang_selector": (1006, 239),
     "lc_code_editor":   (1200, 500),
     "lc_run":           (1650, 940),
@@ -675,11 +668,9 @@ def _ensure_browser_focused():
                 continue
             if any(b in t for b in ["chrome", "brave", "firefox", "edge"]):
                 hwnd = w._hWnd
-                # restore if minimized
                 if win32gui.IsIconic(hwnd):
                     win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
                     time.sleep(0.3)
-                # ALWAYS maximize so coordinates are correct
                 win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
                 win32gui.SetForegroundWindow(hwnd)
                 time.sleep(0.4)
@@ -687,6 +678,39 @@ def _ensure_browser_focused():
     except:
         pass
     return False
+
+
+def _smart_navigate(platform, url):
+    """
+    Smart navigation — checks existing tabs first.
+    Only opens new tab if platform not already open.
+
+    Works for ALL platforms: youtube, whatsapp, leetcode, etc.
+    """
+    try:
+        from brain.tab_intelligence import scan_open_tabs, switch_to_tab
+        open_tabs = scan_open_tabs()
+
+        if platform and platform in open_tabs:
+            print(f"✅ Found existing {platform} tab — switching")
+            switch_to_tab(platform)
+            time.sleep(1)
+            _ensure_browser_focused()
+            return True
+    except Exception as e:
+        print(f"Tab scan error: {e}")
+
+    # not found — open new tab
+    print(f"📂 {platform} not open — opening new tab")
+    try:
+        from browser.browser_agent import open_website
+        open_website(url)
+        time.sleep(2)
+        _ensure_browser_focused()
+        return True
+    except Exception as e:
+        print(f"Navigation error: {e}")
+        return False
 
 
 # ─────────────────────────────
@@ -708,7 +732,6 @@ def _playbook_youtube(query):
     except Exception as e:
         print(f"YouTube search error: {e}")
 
-    # fallback
     encoded = query.replace(" ", "+")
     return [
         {"action": "open_url",
@@ -722,39 +745,29 @@ def _playbook_youtube(query):
 
 
 def _playbook_whatsapp_send(contact, message):
-    """
-    Send WhatsApp message — fixed coordinates (Step 144).
-    Flow: open → wait → click search → type contact →
-          wait for results → click first result →
-          click message input → type → enter → done
-    """
     return [
         {"action": "open_url", "url": "https://web.whatsapp.com"},
-        {"action": "wait", "time": 4},          # wait for chats to load
-        {"action": "maximize"},                  # ensure maximized
+        {"action": "wait", "time": 4},
+        {"action": "maximize"},
         {"action": "click",
-         "x": COORDS["wa_search"][0],
-         "y": COORDS["wa_search"][1]},           # click search bar
+         "x": COORDS["wa_search"][0], "y": COORDS["wa_search"][1]},
         {"action": "wait", "time": 1},
-        {"action": "type", "text": contact},     # type contact name
-        {"action": "wait", "time": 2},           # wait for search results
+        {"action": "type", "text": contact},
+        {"action": "wait", "time": 2},
         {"action": "click",
-         "x": COORDS["wa_first_result"][0],
-         "y": COORDS["wa_first_result"][1]},     # click first result
+         "x": COORDS["wa_first_result"][0], "y": COORDS["wa_first_result"][1]},
         {"action": "wait", "time": 1},
         {"action": "click",
-         "x": COORDS["wa_msg_input"][0],
-         "y": COORDS["wa_msg_input"][1]},        # click message input
+         "x": COORDS["wa_msg_input"][0], "y": COORDS["wa_msg_input"][1]},
         {"action": "wait", "time": 0.5},
-        {"action": "type", "text": message},     # type message
-        {"action": "press", "key": "enter"},     # send
+        {"action": "type", "text": message},
+        {"action": "press", "key": "enter"},
         {"action": "wait", "time": 1},
         {"action": "done"},
     ]
 
 
 def _playbook_whatsapp_check():
-    """Open WhatsApp — 0 tokens."""
     return [
         {"action": "open_url", "url": "https://web.whatsapp.com"},
         {"action": "wait", "time": 3},
@@ -764,27 +777,23 @@ def _playbook_whatsapp_check():
 
 
 def _playbook_whatsapp_read(contact):
-    """Open WhatsApp and navigate to a contact's chat."""
     return [
         {"action": "open_url", "url": "https://web.whatsapp.com"},
         {"action": "wait", "time": 4},
         {"action": "maximize"},
         {"action": "click",
-         "x": COORDS["wa_search"][0],
-         "y": COORDS["wa_search"][1]},
+         "x": COORDS["wa_search"][0], "y": COORDS["wa_search"][1]},
         {"action": "wait", "time": 1},
         {"action": "type", "text": contact},
         {"action": "wait", "time": 2},
         {"action": "click",
-         "x": COORDS["wa_first_result"][0],
-         "y": COORDS["wa_first_result"][1]},
+         "x": COORDS["wa_first_result"][0], "y": COORDS["wa_first_result"][1]},
         {"action": "wait", "time": 1},
         {"action": "done"},
     ]
 
 
 def _playbook_leetcode_open(slug):
-    """Open LeetCode problem — 0 tokens."""
     return [
         {"action": "open_url",
          "url": f"https://leetcode.com/problems/{slug}/"},
@@ -803,8 +812,6 @@ def _get_playbook(goal, platform, context):
 
     if platform == "whatsapp":
         contact = (context or {}).get("contact", "")
-
-        # send message
         if contact and any(w in g for w in ["send", "say", "message", ":"]):
             message = ""
             for sep in [":", "send message", "say "]:
@@ -813,12 +820,8 @@ def _get_playbook(goal, platform, context):
                     break
             if message:
                 return _playbook_whatsapp_send(contact, message), "whatsapp_send"
-
-        # read messages
         if contact and "read" in g:
             return _playbook_whatsapp_read(contact), "whatsapp_read"
-
-        # check unread
         return _playbook_whatsapp_check(), "whatsapp_check"
 
     if platform == "leetcode":
@@ -879,6 +882,7 @@ class VisualAgent:
         print(f"🤖 Visual Agent: {goal}")
         print(f"   Platform: {platform or 'general'}")
 
+        # try hardcoded playbook first — 0 tokens
         playbook, name = _get_playbook(goal, platform, context)
 
         if playbook:
@@ -886,17 +890,21 @@ class VisualAgent:
             print(f"{'='*50}\n")
             return self._run_playbook(playbook, context)
 
+        # LLM mode — check existing tabs first, only open new if needed
         print(f"   Mode: LLM-assisted")
         print(f"{'='*50}\n")
 
         if platform:
-            try:
-                from brain.tab_intelligence import navigate_to_platform
-                navigate_to_platform(platform, force_new_tab=True)
-                time.sleep(2)
-                _ensure_browser_focused()
-            except Exception as e:
-                print(f"Navigation error: {e}")
+            platform_urls = {
+                "gmail":       "https://mail.google.com",
+                "github":      "https://github.com",
+                "naukri":      "https://www.naukri.com",
+                "indeed":      "https://www.indeed.com",
+                "internshala": "https://internshala.com",
+                "linkedin":    "https://www.linkedin.com",
+            }
+            url = platform_urls.get(platform, f"https://www.{platform}.com")
+            _smart_navigate(platform, url)
 
         save_task_state(goal, self.steps_taken, 0, "running", context)
         prompt = _build_prompt()
@@ -979,24 +987,15 @@ class VisualAgent:
         return self._finish("max_steps", context)
 
     # ─────────────────────────────
-    # PLAYBOOK RUNNER
+    # PLAYBOOK RUNNER + LLM FALLBACK
     # ─────────────────────────────
 
-    # REPLACE _run_playbook() in execution/visual_agent.py with this version
-# Adds screen verification after key steps + LLM fallback when playbook fails
-
     def _run_playbook(self, steps, context):
-        """
-        Execute hardcoded steps.
-        If a critical step fails (click lands wrong, page didn't load),
-        automatically falls back to LLM mode to recover.
-        """
+        """Run hardcoded steps. Falls back to LLM if a step fails."""
         print(f"Running {len(steps)} playbook steps...\n")
 
-        # track if we're stuck — same screen hash 3 times = step failed
-        last_hash    = None
-        stuck_count  = 0
-        failed_steps = 0
+        last_hash   = None
+        stuck_count = 0
 
         for i, action in enumerate(steps, 1):
             act = action.get("action")
@@ -1028,43 +1027,36 @@ class VisualAgent:
             else:
                 time.sleep(0.8)
 
-            # ── VERIFY after click/type ──
-            # take screenshot and check if screen changed
+            # verify click/type actually changed the screen
             if act in ("click", "type", "press"):
                 screen_img = capture_screen()
                 if screen_img is not None:
                     current_hash = self._hash(screen_img)
                     if current_hash == last_hash:
                         stuck_count += 1
-                        print(f"  ⚠️  Screen unchanged after {act} ({stuck_count}/2)")
+                        print(f"  ⚠️  Screen unchanged ({stuck_count}/2)")
                         if stuck_count >= 2:
-                            failed_steps += 1
-                            print(f"  ❌ Playbook step failed — switching to LLM mode")
-                            # fall back to LLM for remaining goal
+                            print(f"  ❌ Step failed — switching to LLM")
                             return self._llm_fallback(
                                 self.goal, context,
                                 completed_steps=i,
                                 failure_reason=f"{act} at step {i} had no effect"
                             )
                     else:
-                        stuck_count  = 0
-                        last_hash    = current_hash
+                        stuck_count = 0
+                        last_hash   = current_hash
 
         return self._finish("success", context)
 
-    def _llm_fallback(self, goal, context, completed_steps=0, failure_reason=""):
-        """
-        Called when playbook fails.
-        Switches to LLM-assisted mode to complete the goal.
-        """
-        print(f"\n🔄 Playbook failed at step {completed_steps} — switching to LLM")
-        print(f"   Reason: {failure_reason}")
-        print(f"   LLM will now take over...\n")
+    def _llm_fallback(self, goal, context,
+                      completed_steps=0, failure_reason=""):
+        """Takes over from failed playbook using LLM decisions."""
+        print(f"\n🔄 Switching to LLM — reason: {failure_reason}\n")
 
-        prompt = _build_prompt()
-        max_steps = MAX_STEPS - completed_steps  # use remaining budget
+        prompt    = _build_prompt()
+        max_steps = max(MAX_STEPS - completed_steps, 5)
 
-        for step_num in range(1, max(max_steps, 5) + 1):
+        for step_num in range(1, max_steps + 1):
             print(f"\n--- LLM Step {step_num} ---")
 
             _ensure_browser_focused()
@@ -1079,8 +1071,7 @@ class VisualAgent:
             if h == self.last_hash:
                 self.stuck_count += 1
                 if self.stuck_count >= MAX_STUCK:
-                    return self._finish("stuck", context,
-                                        "LLM fallback also stuck")
+                    return self._finish("stuck", context)
             else:
                 self.stuck_count = 0
                 self.last_hash = h
@@ -1098,14 +1089,13 @@ class VisualAgent:
                   f"{action.get('reasoning','')[:60]}")
 
             if action.get("action") == "done" or action.get("done"):
-                print("✅ LLM recovered — goal achieved!")
+                print("✅ LLM recovered!")
                 return self._finish("success", context)
 
             if action.get("action") == "failed" or action.get("failed"):
                 return self._finish("failed", context,
-                                    action.get("failure_reason", "LLM could not recover"))
+                                    action.get("failure_reason", "unknown"))
 
-            # fix fractional coords
             if action.get("action") == "click":
                 x = action.get("x", 400)
                 y = action.get("y", 300)
@@ -1139,9 +1129,9 @@ class VisualAgent:
                 for s in self.steps_taken[-3:]
             ]
             msg = json.dumps({
-                "goal": goal,
+                "goal":   goal,
                 "screen": screen_text[:250],
-                "step": step_num,
+                "step":   step_num,
                 "history": history,
             })
             for attempt in range(3):
@@ -1150,7 +1140,7 @@ class VisualAgent:
                         model=TEXT_MODEL,
                         messages=[
                             {"role": "system", "content": prompt},
-                            {"role": "user", "content": msg}
+                            {"role": "user",   "content": msg}
                         ],
                         temperature=0.1,
                         max_tokens=120
@@ -1185,29 +1175,23 @@ class VisualAgent:
                 time.sleep(0.2)
                 pyautogui.click(x, y)
                 print(f"  Clicked ({x}, {y})")
-
             elif act == "type":
                 import pyautogui
                 pyautogui.write(action.get("text", ""), interval=0.05)
                 print(f"  Typed: {action.get('text','')}")
-
             elif act == "press":
                 import pyautogui
                 pyautogui.press(action.get("key", "enter"))
-
             elif act == "scroll":
                 import pyautogui
                 d = action.get("direction", "down")
                 a = action.get("amount", 3)
                 pyautogui.scroll(a if d == "down" else -a)
-
             elif act == "hotkey":
                 import pyautogui
                 pyautogui.hotkey(*action.get("keys", []))
-
             else:
                 perform_ui_action(action)
-
         except Exception as e:
             print(f"  Execute error: {e}")
 
@@ -1228,19 +1212,19 @@ class VisualAgent:
             print(f"   Why: {reason}")
         print(f"{'='*50}\n")
         return {
-            "goal": self.goal,
-            "outcome": outcome,
-            "steps": len(self.steps_taken),
+            "goal":       self.goal,
+            "outcome":    outcome,
+            "steps":      len(self.steps_taken),
             "steps_taken": self.steps_taken,
             "duration_ms": ms,
-            "reason": reason,
+            "reason":     reason,
         }
 
     def _record(self, action, screen, success=True):
         self.steps_taken.append({
-            "action": action,
-            "screen": screen[:60],
-            "success": success,
+            "action":    action,
+            "screen":    screen[:60],
+            "success":   success,
             "timestamp": str(datetime.now()),
         })
 
