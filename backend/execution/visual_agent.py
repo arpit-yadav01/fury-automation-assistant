@@ -534,10 +534,9 @@
 
 
 
-
 # execution/visual_agent.py
-# STEP 131-145
-# FIX: check existing tabs for ALL platforms before opening new one
+# FIX: YouTube reuses existing tab
+# FIX: WhatsApp/LLM fallback focuses correct window, not localhost UI
 
 import os
 import json
@@ -581,10 +580,8 @@ PLATFORM_KEYWORDS = {
     "github":      "github.com",
 }
 
-# ── Measured coordinates (1920x1080 maximized Chrome) ──
 COORDS = {
     "yt_first_video":   (400, 250),
-    "yt_second_video":  (400, 450),
     "wa_search":        (289, 216),
     "wa_first_result":  (289, 320),
     "wa_msg_input":     (980, 987),
@@ -655,16 +652,30 @@ def _ocr_screen(img):
         return "screen captured"
 
 
-def _ensure_browser_focused():
-    """Focus AND maximize the real browser window."""
+def _ensure_browser_focused(platform=None):
+    """
+    Focus real Chrome window.
+    If platform given, focuses that specific tab.
+    NEVER focuses localhost/Fury UI tabs.
+    """
     try:
         import win32gui, win32con
         import pygetwindow as gw
+
+        # if platform specified, try to focus that tab first
+        if platform:
+            from browser.browser_agent import focus_platform_tab
+            if focus_platform_tab(platform):
+                return True
+
+        # fallback — find any real browser window, skip localhost
         for w in gw.getAllWindows():
             if not w.title:
                 continue
             t = w.title.lower()
             if "for testing" in t:
+                continue
+            if "localhost" in t:          # skip Fury React UI
                 continue
             if any(b in t for b in ["chrome", "brave", "firefox", "edge"]):
                 hwnd = w._hWnd
@@ -681,36 +692,25 @@ def _ensure_browser_focused():
 
 
 def _smart_navigate(platform, url):
-    """
-    Smart navigation — checks existing tabs first.
-    Only opens new tab if platform not already open.
-
-    Works for ALL platforms: youtube, whatsapp, leetcode, etc.
-    """
+    """Check existing tabs first, open new only if needed."""
     try:
         from brain.tab_intelligence import scan_open_tabs, switch_to_tab
         open_tabs = scan_open_tabs()
-
         if platform and platform in open_tabs:
             print(f"✅ Found existing {platform} tab — switching")
             switch_to_tab(platform)
             time.sleep(1)
-            _ensure_browser_focused()
+            _ensure_browser_focused(platform)
             return True
     except Exception as e:
         print(f"Tab scan error: {e}")
 
-    # not found — open new tab
     print(f"📂 {platform} not open — opening new tab")
-    try:
-        from browser.browser_agent import open_website
-        open_website(url)
-        time.sleep(2)
-        _ensure_browser_focused()
-        return True
-    except Exception as e:
-        print(f"Navigation error: {e}")
-        return False
+    from browser.browser_agent import open_website
+    open_website(url)
+    time.sleep(2)
+    _ensure_browser_focused(platform)
+    return True
 
 
 # ─────────────────────────────
@@ -718,20 +718,42 @@ def _smart_navigate(platform, url):
 # ─────────────────────────────
 
 def _playbook_youtube(query):
-    """Play YouTube — direct video URL, no ads."""
+    """
+    Play YouTube.
+    If YouTube tab exists → navigate within it (no new tab).
+    If not → open new tab.
+    """
     try:
         from platforms.youtube_agent import search_youtube
         results = search_youtube(query)
         if results:
-            print(f"   🎵 Direct: {results[0]}")
+            video_url = results[0]
+            print(f"   🎵 Direct: {video_url}")
+
+            # check if youtube tab already open
+            try:
+                from brain.tab_intelligence import scan_open_tabs
+                open_tabs = scan_open_tabs()
+                if "youtube" in open_tabs:
+                    # reuse existing tab — navigate within it
+                    return [
+                        {"action": "navigate_in_tab", "url": video_url},
+                        {"action": "wait", "time": 2},
+                        {"action": "done"},
+                    ]
+            except:
+                pass
+
+            # no youtube tab — open new
             return [
-                {"action": "open_url", "url": results[0]},
+                {"action": "open_url", "url": video_url},
                 {"action": "wait", "time": 2},
                 {"action": "done"},
             ]
     except Exception as e:
         print(f"YouTube search error: {e}")
 
+    # fallback
     encoded = query.replace(" ", "+")
     return [
         {"action": "open_url",
@@ -832,15 +854,24 @@ def _get_playbook(goal, platform, context):
     return None, None
 
 
-def _build_prompt():
-    return f"""You are Fury on Windows {SCREEN_W}x{SCREEN_H}.
+def _build_prompt(platform=None):
+    base = f"""You are Fury on Windows {SCREEN_W}x{SCREEN_H}.
 Decide ONE action from OCR screen text. Return ONE JSON only.
+IMPORTANT: You are controlling a browser, NOT the Fury chat UI.
 
 {{"action":"click","x":400,"y":250,"reasoning":"why","done":false,"failed":false,"failure_reason":null}}
 
 Actions: open_url, click, type, press, wait, scroll, done, failed
-Use pixel coordinates. YouTube first video: x=400,y=250.
+Use pixel coordinates.
 """
+    if platform == "whatsapp":
+        base += """
+WhatsApp Web coordinates:
+- Search bar: x=289, y=216
+- First result: x=289, y=320
+- Message input: x=980, y=987
+"""
+    return base
 
 
 # ─────────────────────────────
@@ -856,11 +887,13 @@ class VisualAgent:
         self.last_hash   = None
         self.stuck_count = 0
         self.last_url    = None
+        self.platform    = None
 
     def run(self, goal, max_steps=MAX_STEPS, context=None, resume=False):
 
-        platform = _detect_platform(goal)
-        self.goal        = goal
+        platform      = _detect_platform(goal)
+        self.platform = platform
+        self.goal     = goal
         self.start_time  = time.time()
         self.stuck_count = 0
         self.last_hash   = None
@@ -882,7 +915,6 @@ class VisualAgent:
         print(f"🤖 Visual Agent: {goal}")
         print(f"   Platform: {platform or 'general'}")
 
-        # try hardcoded playbook first — 0 tokens
         playbook, name = _get_playbook(goal, platform, context)
 
         if playbook:
@@ -890,7 +922,6 @@ class VisualAgent:
             print(f"{'='*50}\n")
             return self._run_playbook(playbook, context)
 
-        # LLM mode — check existing tabs first, only open new if needed
         print(f"   Mode: LLM-assisted")
         print(f"{'='*50}\n")
 
@@ -907,12 +938,12 @@ class VisualAgent:
             _smart_navigate(platform, url)
 
         save_task_state(goal, self.steps_taken, 0, "running", context)
-        prompt = _build_prompt()
+        prompt = _build_prompt(platform)
 
         for step_num in range(1, max_steps + 1):
             print(f"\n--- Step {step_num}/{max_steps} ---")
 
-            _ensure_browser_focused()
+            _ensure_browser_focused(platform)
             time.sleep(0.3)
 
             screen_img = capture_screen()
@@ -925,7 +956,7 @@ class VisualAgent:
                 self.stuck_count += 1
                 print(f"Screen unchanged ({self.stuck_count}/{MAX_STUCK})")
                 if self.stuck_count >= MAX_STUCK:
-                    _ensure_browser_focused()
+                    _ensure_browser_focused(platform)
                     time.sleep(1)
                     self.stuck_count = 0
                     continue
@@ -936,7 +967,8 @@ class VisualAgent:
             screen_text = _ocr_screen(screen_img)
             print(f"Screen: {screen_text[:80]}")
 
-            action = self._decide(goal, screen_text, step_num, context, prompt)
+            action = self._decide(goal, screen_text, step_num,
+                                  context, prompt)
             if action is None:
                 time.sleep(2)
                 continue
@@ -951,9 +983,8 @@ class VisualAgent:
                 return self._finish("success", context)
 
             if action.get("action") == "failed" or action.get("failed"):
-                return self._finish(
-                    "failed", context,
-                    action.get("failure_reason", "unknown"))
+                return self._finish("failed", context,
+                                    action.get("failure_reason", "unknown"))
 
             if action.get("action") == "open_url":
                 url = action.get("url", "")
@@ -977,21 +1008,20 @@ class VisualAgent:
             save_task_state(goal, self.steps_taken, step_num,
                             "running", context)
 
-            if action.get("action") == "open_url":
+            if action.get("action") in ("open_url", "navigate_in_tab"):
                 print("Waiting for page...")
                 time.sleep(3)
-                _ensure_browser_focused()
+                _ensure_browser_focused(platform)
 
             time.sleep(STEP_DELAY)
 
         return self._finish("max_steps", context)
 
     # ─────────────────────────────
-    # PLAYBOOK RUNNER + LLM FALLBACK
+    # PLAYBOOK RUNNER
     # ─────────────────────────────
 
     def _run_playbook(self, steps, context):
-        """Run hardcoded steps. Falls back to LLM if a step fails."""
         print(f"Running {len(steps)} playbook steps...\n")
 
         last_hash   = None
@@ -1013,7 +1043,7 @@ class VisualAgent:
 
             if act == "maximize":
                 print("(maximizing browser)")
-                _ensure_browser_focused()
+                _ensure_browser_focused(self.platform)
                 time.sleep(0.5)
                 continue
 
@@ -1021,13 +1051,13 @@ class VisualAgent:
             self._execute(action)
             self._record(action, "playbook", True)
 
-            if act == "open_url":
+            if act in ("open_url", "navigate_in_tab"):
                 time.sleep(3)
-                _ensure_browser_focused()
+                _ensure_browser_focused(self.platform)
             else:
                 time.sleep(0.8)
 
-            # verify click/type actually changed the screen
+            # verify click/type changed screen
             if act in ("click", "type", "press"):
                 screen_img = capture_screen()
                 if screen_img is not None:
@@ -1050,16 +1080,18 @@ class VisualAgent:
 
     def _llm_fallback(self, goal, context,
                       completed_steps=0, failure_reason=""):
-        """Takes over from failed playbook using LLM decisions."""
-        print(f"\n🔄 Switching to LLM — reason: {failure_reason}\n")
+        print(f"\n🔄 Switching to LLM — {failure_reason}\n")
 
-        prompt    = _build_prompt()
+        # make sure we're focused on the RIGHT browser window
+        _ensure_browser_focused(self.platform)
+
+        prompt    = _build_prompt(self.platform)
         max_steps = max(MAX_STEPS - completed_steps, 5)
 
         for step_num in range(1, max_steps + 1):
             print(f"\n--- LLM Step {step_num} ---")
 
-            _ensure_browser_focused()
+            _ensure_browser_focused(self.platform)
             time.sleep(0.3)
 
             screen_img = capture_screen()
@@ -1108,9 +1140,9 @@ class VisualAgent:
             self._execute(action)
             self._record(action, screen_text, True)
 
-            if action.get("action") == "open_url":
+            if action.get("action") in ("open_url", "navigate_in_tab"):
                 time.sleep(3)
-                _ensure_browser_focused()
+                _ensure_browser_focused(self.platform)
 
             time.sleep(STEP_DELAY)
 
@@ -1129,9 +1161,9 @@ class VisualAgent:
                 for s in self.steps_taken[-3:]
             ]
             msg = json.dumps({
-                "goal":   goal,
-                "screen": screen_text[:250],
-                "step":   step_num,
+                "goal":    goal,
+                "screen":  screen_text[:250],
+                "step":    step_num,
                 "history": history,
             })
             for attempt in range(3):
@@ -1167,31 +1199,41 @@ class VisualAgent:
     def _execute(self, action):
         act = action.get("action")
         try:
-            if act == "click":
+            if act == "navigate_in_tab":
+                from browser.browser_agent import navigate_in_tab
+                navigate_in_tab(action.get("url", ""))
+
+            elif act == "click":
                 import pyautogui
                 x = int(action.get("x", 400))
                 y = int(action.get("y", 300))
-                _ensure_browser_focused()
+                _ensure_browser_focused(self.platform)
                 time.sleep(0.2)
                 pyautogui.click(x, y)
                 print(f"  Clicked ({x}, {y})")
+
             elif act == "type":
                 import pyautogui
                 pyautogui.write(action.get("text", ""), interval=0.05)
                 print(f"  Typed: {action.get('text','')}")
+
             elif act == "press":
                 import pyautogui
                 pyautogui.press(action.get("key", "enter"))
+
             elif act == "scroll":
                 import pyautogui
                 d = action.get("direction", "down")
                 a = action.get("amount", 3)
                 pyautogui.scroll(a if d == "down" else -a)
+
             elif act == "hotkey":
                 import pyautogui
                 pyautogui.hotkey(*action.get("keys", []))
+
             else:
                 perform_ui_action(action)
+
         except Exception as e:
             print(f"  Execute error: {e}")
 
@@ -1212,12 +1254,12 @@ class VisualAgent:
             print(f"   Why: {reason}")
         print(f"{'='*50}\n")
         return {
-            "goal":       self.goal,
-            "outcome":    outcome,
-            "steps":      len(self.steps_taken),
+            "goal":        self.goal,
+            "outcome":     outcome,
+            "steps":       len(self.steps_taken),
             "steps_taken": self.steps_taken,
             "duration_ms": ms,
-            "reason":     reason,
+            "reason":      reason,
         }
 
     def _record(self, action, screen, success=True):
@@ -1236,10 +1278,6 @@ class VisualAgent:
         except:
             return None
 
-
-# ─────────────────────────────
-# ENTRY POINTS
-# ─────────────────────────────
 
 def run_visual_goal(goal, context=None,
                     max_steps=MAX_STEPS, resume=False):
