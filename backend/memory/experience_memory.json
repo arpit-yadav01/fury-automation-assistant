@@ -1133,5 +1133,28 @@
     },
     "success": true,
     "timestamp": "2026-04-18 21:53:56.827868"
+  },
+  {
+    "command": "check whatsapp and sednd hi to rishu",
+    "plan": {
+      "workflow": [
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "check whatsapp"
+          }
+        },
+        {
+          "action": "skill",
+          "data": {
+            "intent": "unknown",
+            "raw": "sednd hi to rishu"
+          }
+        }
+      ]
+    },
+    "success": true,
+    "timestamp": "2026-04-21 16:33:02.056252"
   }
 ]

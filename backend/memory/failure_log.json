@@ -274,5 +274,29 @@
   {
     "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'send hi to rishu'}}",
     "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'check whatsapp'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'check whatsapp'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'check whatsapp'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'sednd hi to rishu'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'sednd hi to rishu'}}",
+    "error": "Skill failed"
+  },
+  {
+    "action": "{'action': 'skill', 'data': {'intent': 'unknown', 'raw': 'sednd hi to rishu'}}",
+    "error": "Skill failed"
   }
 ]
